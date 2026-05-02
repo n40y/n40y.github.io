@@ -5,7 +5,7 @@
     "difficulty": "Easy",
     "os": "Linux",
     "date": "2026-04-25",
-    "file": "writeups/htb-kobold.md"
+    "file": "writeups/htb-Kobold.md"
   },
   {
     "platform": "HackTheBox",
@@ -21,7 +21,7 @@
     "difficulty": "Easy",
     "os": "Linux",
     "date": "2025-09-21",
-    "file": "writeups/htb-planning.md"
+    "file": "writeups/htb-Planning.md"
   },
   {
     "platform": "TryHackMe",
