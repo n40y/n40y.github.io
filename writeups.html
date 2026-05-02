@@ -95,7 +95,6 @@
 
     .loader { text-align: center; padding: 10px; color: #6ef0d3; font-style: italic; font-size: 13px; }
     
-    /* Markdown Style corrigé */
     .writeup-content img { max-width: 100%; border-radius: 8px; margin: 15px 0; }
     .writeup-content pre { margin: 15px 0; border-radius: 8px; background: #0d1117 !important; }
   </style>
@@ -128,7 +127,7 @@
   </footer>
 
   <script>
-    // 1. Config Markdown
+    // Config Markdown
     marked.setOptions({
       highlight: (code, lang) => {
         if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
@@ -137,7 +136,7 @@
       breaks: true
     });
 
-    // 2. Gestion Thème
+    // Thème
     function applyTheme(isDark) {
       const hlTheme = document.getElementById('highlight-theme');
       document.body.className = isDark ? 'dark-mode' : 'light-mode';
@@ -154,11 +153,10 @@
     });
     applyTheme(localStorage.getItem('theme') !== 'light');
 
-    // 3. Logique d'ouverture et chargement (Le Correctif)
+    // Ouverture et chargement
     async function loadAndToggle(h3, contentDiv, entry) {
       const isOpen = contentDiv.classList.contains('open');
 
-      // Fermer les autres accordéons
       document.querySelectorAll('.writeup-content.open').forEach(other => {
         if (other !== contentDiv) {
           other.style.height = '0';
@@ -172,11 +170,10 @@
         contentDiv.classList.remove('open');
         h3.classList.remove('open');
       } else {
-        // Charger si vide
         if (!contentDiv.dataset.loaded) {
           contentDiv.innerHTML = '<div class="loader">Récupération du contenu...</div>';
           contentDiv.classList.add('open');
-          contentDiv.style.height = '60px'; // Hauteur du loader
+          contentDiv.style.height = '60px';
 
           try {
             const res = await fetch(entry.file);
@@ -184,32 +181,30 @@
             const md = await res.text();
             contentDiv.innerHTML = marked.parse(md);
             contentDiv.dataset.loaded = "true";
-            
-            // Appliquer highlight sur le nouveau contenu
             contentDiv.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
           } catch {
             contentDiv.innerHTML = `<p style="color:#e06339">Fichier introuvable : ${entry.file}</p>`;
           }
         }
 
-        // Calcul de la hauteur après rendu
         h3.classList.add('open');
         contentDiv.classList.add('open');
         
-        // On attend la prochaine frame d'affichage pour calculer la hauteur réelle
         requestAnimationFrame(() => {
           contentDiv.style.height = contentDiv.scrollHeight + 'px';
         });
       }
     }
 
-    // 4. Construction de la page
+    // Construction de la page
     async function buildPage() {
       const list = document.getElementById('writeupList');
       const filters = document.getElementById('filters');
 
       try {
-        const res = await fetch('writeups/manifest.json');
+        // --- CHANGEMENT ICI : writeups.json au lieu de manifest.json ---
+        const res = await fetch('writeups/writeups.json');
+        if (!res.ok) throw new Error("Fichier JSON non trouvé");
         const manifest = await res.json();
 
         const platforms = {};
@@ -218,7 +213,6 @@
           platforms[e.platform].push(e);
         });
 
-        // Boutons filtres
         Object.keys(platforms).forEach(p => {
           const btn = document.createElement('button');
           btn.className = 'filter-btn';
@@ -238,7 +232,6 @@
           });
         });
 
-        // Sections
         for (const [platform, entries] of Object.entries(platforms)) {
           const section = document.createElement('section');
           section.className = 'platform-section';
@@ -271,7 +264,8 @@
           list.appendChild(section);
         }
       } catch (err) {
-        list.innerHTML = '<p style="color:#e06339">Erreur : Impossible de charger manifest.json</p>';
+        // --- MESSAGE D'ERREUR MIS À JOUR ---
+        list.innerHTML = `<p style="color:#e06339; padding: 20px;">Erreur : Impossible de charger <code>writeups/writeups.json</code>. Vérifiez que le fichier existe dans votre repo.</p>`;
       }
     }
 
