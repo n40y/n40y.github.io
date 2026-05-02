@@ -127,149 +127,173 @@
   </footer>
 
   <script>
-    // Config Markdown
-    marked.setOptions({
-      highlight: (code, lang) => {
-        if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
-        return hljs.highlightAuto(code).value;
-      },
-      breaks: true
+  // 1. Configuration Markdown
+  marked.setOptions({
+    highlight: (code, lang) => {
+      if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
+      return hljs.highlightAuto(code).value;
+    },
+    breaks: true
+  });
+
+  // 2. Gestion du Thème
+  function applyTheme(isDark) {
+    const hlTheme = document.getElementById('highlight-theme');
+    document.body.className = isDark ? 'dark-mode' : 'light-mode';
+    document.querySelector('.theme-icon').textContent = isDark ? '☀️' : '🌙';
+    hlTheme.href = isDark 
+      ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
+      : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
+  }
+
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    const isDark = !document.body.classList.contains('dark-mode');
+    applyTheme(isDark);
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  });
+  applyTheme(localStorage.getItem('theme') !== 'light');
+
+  // 3. Logique d'accordéon robuste (Fix pour les writeups coupés)
+  async function loadAndToggle(h3, contentDiv, entry) {
+    const isOpen = contentDiv.classList.contains('open');
+
+    // Fermer les autres
+    document.querySelectorAll('.writeup-content.open').forEach(other => {
+      if (other !== contentDiv) {
+        other.style.height = other.scrollHeight + 'px'; // Préparer l'anim
+        setTimeout(() => other.style.height = '0', 10);
+        other.classList.remove('open');
+        other.parentElement.querySelector('.clickable').classList.remove('open');
+      }
     });
 
-    // Thème
-    function applyTheme(isDark) {
-      const hlTheme = document.getElementById('highlight-theme');
-      document.body.className = isDark ? 'dark-mode' : 'light-mode';
-      document.querySelector('.theme-icon').textContent = isDark ? '☀️' : '🌙';
-      hlTheme.href = isDark 
-        ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
-        : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
-    }
+    if (isOpen) {
+      // Transition vers 0 (on repasse par les pixels pour l'animation)
+      contentDiv.style.height = contentDiv.scrollHeight + 'px';
+      setTimeout(() => {
+        contentDiv.style.height = '0';
+      }, 10);
+      contentDiv.classList.remove('open');
+      h3.classList.remove('open');
+    } else {
+      if (!contentDiv.dataset.loaded) {
+        contentDiv.innerHTML = '<div class="loader">Chargement du contenu...</div>';
+        contentDiv.classList.add('open');
+        contentDiv.style.height = '60px';
 
-    document.getElementById('theme-toggle').addEventListener('click', () => {
-      const isDark = !document.body.classList.contains('dark-mode');
-      applyTheme(isDark);
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    });
-    applyTheme(localStorage.getItem('theme') !== 'light');
+        try {
+          const res = await fetch(entry.file);
+          if (!res.ok) throw new Error();
+          const md = await res.text();
+          contentDiv.innerHTML = marked.parse(md);
+          contentDiv.dataset.loaded = "true";
+          
+          // Coloration syntaxique
+          contentDiv.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+          
+          // ATTENTE DES IMAGES : On attend qu'elles soient chargées pour avoir la vraie hauteur
+          const imgs = contentDiv.querySelectorAll('img');
+          await Promise.all(Array.from(imgs).map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+          }));
 
-    // Ouverture et chargement
-    async function loadAndToggle(h3, contentDiv, entry) {
-      const isOpen = contentDiv.classList.contains('open');
-
-      document.querySelectorAll('.writeup-content.open').forEach(other => {
-        if (other !== contentDiv) {
-          other.style.height = '0';
-          other.classList.remove('open');
-          other.parentElement.querySelector('.clickable').classList.remove('open');
+        } catch {
+          contentDiv.innerHTML = `<p style="color:#e06339">Fichier introuvable : ${entry.file}</p>`;
         }
+      }
+
+      h3.classList.add('open');
+      contentDiv.classList.add('open');
+      
+      // Calcul et animation
+      const fullHeight = contentDiv.scrollHeight;
+      contentDiv.style.height = fullHeight + 'px';
+
+      // SÉCURITÉ CRITIQUE : Une fois l'anim finie, on passe en height: auto
+      contentDiv.addEventListener('transitionend', function handler() {
+        if (contentDiv.classList.contains('open')) {
+          contentDiv.style.height = 'auto';
+        }
+        contentDiv.removeEventListener('transitionend', handler);
+      }, { once: true });
+    }
+  }
+
+  // 4. Construction de la page depuis writeups.json
+  async function buildPage() {
+    const list = document.getElementById('writeupList');
+    const filters = document.getElementById('filters');
+
+    try {
+      const res = await fetch('writeups/writeups.json');
+      if (!res.ok) throw new Error();
+      const manifest = await res.json();
+
+      const platforms = {};
+      manifest.forEach(e => {
+        if (!platforms[e.platform]) platforms[e.platform] = [];
+        platforms[e.platform].push(e);
       });
 
-      if (isOpen) {
-        contentDiv.style.height = '0';
-        contentDiv.classList.remove('open');
-        h3.classList.remove('open');
-      } else {
-        if (!contentDiv.dataset.loaded) {
-          contentDiv.innerHTML = '<div class="loader">Récupération du contenu...</div>';
-          contentDiv.classList.add('open');
-          contentDiv.style.height = '60px';
+      // Filtres
+      Object.keys(platforms).forEach(p => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn';
+        btn.dataset.platform = p;
+        btn.textContent = p;
+        filters.appendChild(btn);
+      });
 
-          try {
-            const res = await fetch(entry.file);
-            if (!res.ok) throw new Error();
-            const md = await res.text();
-            contentDiv.innerHTML = marked.parse(md);
-            contentDiv.dataset.loaded = "true";
-            contentDiv.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
-          } catch {
-            contentDiv.innerHTML = `<p style="color:#e06339">Fichier introuvable : ${entry.file}</p>`;
-          }
-        }
-
-        h3.classList.add('open');
-        contentDiv.classList.add('open');
-        
-        requestAnimationFrame(() => {
-          contentDiv.style.height = contentDiv.scrollHeight + 'px';
+      filters.addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-btn');
+        if (!btn) return;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.dataset.platform;
+        document.querySelectorAll('.platform-section').forEach(s => {
+          s.style.display = (target === 'all' || s.dataset.platform === target) ? '' : 'none';
         });
+      });
+
+      // Création des sections
+      for (const [platform, entries] of Object.entries(platforms)) {
+        const section = document.createElement('section');
+        section.className = 'platform-section';
+        section.dataset.platform = platform;
+        section.innerHTML = `<h2>${platform}</h2>`;
+
+        entries.forEach(entry => {
+          const article = document.createElement('article');
+          article.className = 'writeup-item';
+
+          const h3 = document.createElement('h3');
+          h3.className = 'clickable';
+          h3.innerHTML = `
+            <span style="display:flex;align-items:center;gap:10px;">
+              <span class="title-text">${entry.title}</span>
+              <span class="diff-badge diff-${entry.difficulty.toLowerCase()}">${entry.difficulty}</span>
+            </span>
+            <span style="font-size:11px;opacity:0.4;margin-right:20px">${entry.date}</span>
+          `;
+
+          const contentDiv = document.createElement('div');
+          contentDiv.className = 'writeup-content';
+
+          h3.addEventListener('click', () => loadAndToggle(h3, contentDiv, entry));
+
+          article.appendChild(h3);
+          article.appendChild(contentDiv);
+          section.appendChild(article);
+        });
+        list.appendChild(section);
       }
+    } catch (err) {
+      list.innerHTML = `<p style="color:#e06339; padding:20px;">Erreur de chargement du fichier <code>writeups/writeups.json</code>.</p>`;
     }
+  }
 
-    // Construction de la page
-    async function buildPage() {
-      const list = document.getElementById('writeupList');
-      const filters = document.getElementById('filters');
-
-      try {
-        // --- CHANGEMENT ICI : writeups.json au lieu de manifest.json ---
-        const res = await fetch('writeups/writeups.json');
-        if (!res.ok) throw new Error("Fichier JSON non trouvé");
-        const manifest = await res.json();
-
-        const platforms = {};
-        manifest.forEach(e => {
-          if (!platforms[e.platform]) platforms[e.platform] = [];
-          platforms[e.platform].push(e);
-        });
-
-        Object.keys(platforms).forEach(p => {
-          const btn = document.createElement('button');
-          btn.className = 'filter-btn';
-          btn.dataset.platform = p;
-          btn.textContent = p;
-          filters.appendChild(btn);
-        });
-
-        filters.addEventListener('click', (e) => {
-          const btn = e.target.closest('.filter-btn');
-          if (!btn) return;
-          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          const target = btn.dataset.platform;
-          document.querySelectorAll('.platform-section').forEach(s => {
-            s.style.display = (target === 'all' || s.dataset.platform === target) ? '' : 'none';
-          });
-        });
-
-        for (const [platform, entries] of Object.entries(platforms)) {
-          const section = document.createElement('section');
-          section.className = 'platform-section';
-          section.dataset.platform = platform;
-          section.innerHTML = `<h2>${platform}</h2>`;
-
-          entries.forEach(entry => {
-            const article = document.createElement('article');
-            article.className = 'writeup-item';
-
-            const h3 = document.createElement('h3');
-            h3.className = 'clickable';
-            h3.innerHTML = `
-              <span style="display:flex;align-items:center;gap:10px;">
-                <span class="title-text">${entry.title}</span>
-                <span class="diff-badge diff-${entry.difficulty.toLowerCase()}">${entry.difficulty}</span>
-              </span>
-              <span style="font-size:11px;opacity:0.4;margin-right:20px">${entry.date}</span>
-            `;
-
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'writeup-content';
-
-            h3.addEventListener('click', () => loadAndToggle(h3, contentDiv, entry));
-
-            article.appendChild(h3);
-            article.appendChild(contentDiv);
-            section.appendChild(article);
-          });
-          list.appendChild(section);
-        }
-      } catch (err) {
-        // --- MESSAGE D'ERREUR MIS À JOUR ---
-        list.innerHTML = `<p style="color:#e06339; padding: 20px;">Erreur : Impossible de charger <code>writeups/writeups.json</code>. Vérifiez que le fichier existe dans votre repo.</p>`;
-      }
-    }
-
-    buildPage();
-  </script>
+  buildPage();
+</script>
 </body>
 </html>
