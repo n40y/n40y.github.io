@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>n40y - Writeups CTF</title>
 
+  <!-- Bibliothèques externes -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <link id="highlight-theme" rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <link id="highlight-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <link rel="stylesheet" href="style/style.css">
 
@@ -20,404 +20,262 @@
       transition: background 0.3s ease, color 0.3s ease;
     }
     body.dark-mode::before {
-      content: "";
-      position: fixed;
-      inset: 0;
+      content: ""; position: fixed; inset: 0;
       background: linear-gradient(180deg, rgba(0,0,0,0.65), rgba(2,6,12,0.85));
       z-index: -2;
     }
     body.light-mode::before {
-      content: "";
-      position: fixed;
-      inset: 0;
+      content: ""; position: fixed; inset: 0;
       background: linear-gradient(180deg, rgba(232,236,239,0.2), rgba(245,247,250,0.4));
       z-index: -2;
     }
     main {
-      position: relative;
-      z-index: 2;
-      max-width: 1100px;
-      margin: 0 auto;
+      position: relative; z-index: 2; max-width: 1100px; margin: 0 auto;
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      backdrop-filter: blur(2px);
-      padding: 20px;
-      border-radius: 12px;
+      backdrop-filter: blur(2px); padding: 20px; border-radius: 12px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
     body.light-mode main {
       background: linear-gradient(180deg, rgba(232,236,239,0.6), rgba(245,247,250,0.7));
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
-    header h1 { margin: 0 0 6px; font-size: 2rem; color: var(--accent1, #6ef0d3); }
+    header h1 { margin: 0 0 6px; font-size: 2rem; color: #6ef0d3; }
     header p  { margin: 0 0 16px; color: rgba(219,239,255,0.9); }
 
     .theme-toggle {
-      position: fixed; right: 18px; top: 18px;
-      padding: 8px 12px; border-radius: 10px; border: 0; cursor: pointer;
+      position: fixed; right: 18px; top: 18px; padding: 8px 12px; border-radius: 10px; border: 0; cursor: pointer;
       background: linear-gradient(90deg,#1e90ff,#8a2be2); color: #fff;
       font-weight: 700; box-shadow: 0 6px 18px rgba(0,0,0,0.35); z-index: 9999;
     }
-    body.light-mode .theme-toggle {
-      background: linear-gradient(90deg, #5dade2, #bb8fce);
-    }
 
-    /* Filtres plateforme */
-    .filters {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
     .filter-btn {
-      padding: 6px 16px;
-      border-radius: 20px;
-      border: 1px solid rgba(110,240,211,0.3);
-      background: transparent;
-      color: rgba(219,239,255,0.7);
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: inherit;
+      padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(110,240,211,0.3);
+      background: transparent; color: rgba(219,239,255,0.7); font-size: 13px; cursor: pointer; transition: all 0.2s;
     }
-    .filter-btn:hover,
-    .filter-btn.active {
-      background: rgba(110,240,211,0.12);
-      border-color: rgba(110,240,211,0.6);
-      color: #6ef0d3;
-    }
-    body.light-mode .filter-btn {
-      border-color: rgba(93,173,226,0.4);
-      color: #5dade2;
-    }
-    body.light-mode .filter-btn:hover,
-    body.light-mode .filter-btn.active {
-      background: rgba(93,173,226,0.1);
-      border-color: #5dade2;
+    .filter-btn:hover, .filter-btn.active {
+      background: rgba(110,240,211,0.12); border-color: rgba(110,240,211,0.6); color: #6ef0d3;
     }
 
-    /* Sections par plateforme */
     .platform-section {
       margin-bottom: 26px; padding: 14px; border-radius: 10px;
-      background: rgba(5,8,12,0.55);
-      border: 1px solid rgba(255,255,255,0.03);
+      background: rgba(5,8,12,0.55); border: 1px solid rgba(255,255,255,0.03);
     }
-    body.light-mode .platform-section {
-      background: #f5f7fa;
-      border: 1px solid #e9ecef;
-    }
-    .platform-section h2 {
-      margin: 0 0 12px;
-      color: #b16bff;
-      text-shadow: 0 2px 6px rgba(177,107,255,0.06);
-    }
-    body.light-mode .platform-section h2 { color: #5dade2; }
+    .platform-section h2 { margin: 0 0 12px; color: #b16bff; }
 
-    /* Cards writeup */
     .writeup-item {
       margin: 12px 0; padding: 12px; border-radius: 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border: 1px solid rgba(255,255,255,0.03);
+      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03);
     }
-    body.light-mode .writeup-item {
-      background: #f5f7fa;
-      border: 1px solid #e9ecef;
-    }
-    .writeup-item h3 { margin: 0; font-size: 1.05rem; position: relative; }
 
     .clickable {
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-right: 28px;
-      user-select: none;
+      cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+      padding-right: 28px; user-select: none; position: relative;
     }
     .clickable .title-text { color: #6ef0d3; font-weight: 600; }
-    body.light-mode .clickable .title-text { color: #bb8fce; }
 
     .clickable::after {
       content: '+'; font-size: 1.25rem; font-weight: 700;
-      position: absolute; right: 16px; top: 50%;
+      position: absolute; right: 8px; top: 50%;
       transform: translateY(-50%); transition: transform 0.2s;
     }
     .clickable.open::after { content: '−'; transform: translateY(-50%) rotate(180deg); }
 
-    /* Badge difficulté */
-    .diff-badge {
-      font-size: 11px; font-weight: 600; padding: 2px 8px;
-      border-radius: 4px; margin-left: 10px; letter-spacing: 0.05em;
-      text-transform: uppercase; flex-shrink: 0;
-    }
+    .diff-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
     .diff-easy   { background: rgba(57,224,110,.12); color: #39e06e; border: 1px solid rgba(57,224,110,.3); }
     .diff-medium { background: rgba(224,176,57,.12); color: #e0b039; border: 1px solid rgba(224,176,57,.3); }
     .diff-hard   { background: rgba(224,99,57,.12);  color: #e06339; border: 1px solid rgba(224,99,57,.3);  }
     .diff-insane { background: rgba(192,57,224,.12); color: #c039e0; border: 1px solid rgba(192,57,224,.3); }
 
-    /* Contenu accordéon */
     .writeup-content {
-      height: 0; overflow: hidden;
-      padding: 0 8px;
-      transition: height 0.45s ease, padding 0.25s ease;
+      height: 0; overflow: hidden; padding: 0 8px;
+      transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
     }
-    .writeup-content.open { padding: 12px 8px; height: auto; }
+    .writeup-content.open { padding: 16px 8px; }
 
-    /* Markdown dans l'accordéon */
-    .writeup-content h1,.writeup-content h2,.writeup-content h3 { color: #b16bff; margin-top: 8px; }
-    body.light-mode .writeup-content h1,
-    body.light-mode .writeup-content h2,
-    body.light-mode .writeup-content h3 { color: #5dade2; }
-    .writeup-content p  { margin: 8px 0; }
-    .writeup-content ul { margin: 8px 0 8px 20px; }
-    .writeup-content pre {
-      background: #0b1116; color: #4cffb6;
-      padding: 12px; border-radius: 8px; overflow: auto; margin: 10px 0;
-      white-space: pre-wrap; font-family: "Hack", monospace; font-size: 0.95rem;
-      border: 1px solid rgba(0,255,182,0.06); max-height: none;
-    }
-    body.light-mode .writeup-content pre { background: #f1f3f4; color: #3498db; border: 1px solid #dee2e6; }
-    .writeup-content code { background: rgba(255,255,255,0.03); padding: 2px 6px; border-radius: 4px; }
-    body.light-mode .writeup-content code { background: rgba(233,236,239,0.5); }
-    .writeup-content table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-    .writeup-content th,.writeup-content td {
-      padding: 6px 8px; text-align: left;
-      border-bottom: 1px solid rgba(255,255,255,0.06); word-break: break-word;
-    }
-    body.light-mode .writeup-content th,
-    body.light-mode .writeup-content td { border-bottom: 1px solid #e9ecef; }
-    .writeup-content img { max-width: 100%; border-radius: 8px; margin: 10px 0; display: block; }
-    .writeup-content blockquote {
-      border-left: 3px solid #6ef0d3; padding: 4px 12px; margin: 8px 0;
-      background: rgba(110,240,211,0.05); border-radius: 0 6px 6px 0;
-      color: rgba(219,239,255,0.75);
-    }
-    body.light-mode .writeup-content blockquote {
-      border-left-color: #5dade2;
-      background: rgba(93,173,226,0.05);
-      color: #5a7a9a;
-    }
-
-    /* Loader */
-    .loader {
-      text-align: center; padding: 8px;
-      color: rgba(219,239,255,0.4);
-      font-size: 13px; font-style: italic;
-    }
-
-    /* Etat vide */
-    .platform-section:empty { display: none; }
-
-    /* Footer */
-    footer { text-align: center; padding: 20px; margin-top: 40px; opacity: 0.7; }
-
-    @media (max-width: 600px) {
-      body { padding: 18px; }
-      header h1 { font-size: 1.4rem; }
-      .theme-toggle { right: 12px; top: 12px; padding: 6px 10px; }
-    }
+    .loader { text-align: center; padding: 10px; color: #6ef0d3; font-style: italic; font-size: 13px; }
+    
+    /* Markdown Style corrigé */
+    .writeup-content img { max-width: 100%; border-radius: 8px; margin: 15px 0; }
+    .writeup-content pre { margin: 15px 0; border-radius: 8px; background: #0d1117 !important; }
   </style>
 </head>
 
 <body class="dark-mode">
-  <button id="theme-toggle" class="theme-toggle" aria-label="Basculer thème">
-    <span class="theme-icon">🌙</span>
+  <button id="theme-toggle" class="theme-toggle">
+    <span class="theme-icon">☀️</span>
   </button>
 
   <main>
     <header>
       <h1>📂 Writeups CTF</h1>
-      <p>Organisés par plateforme — cliquer pour lire</p>
+      <p>Mes solutions détaillées par plateforme</p>
     </header>
 
-    <!-- Filtres -->
     <div class="filters" id="filters">
       <button class="filter-btn active" data-platform="all">Tous</button>
     </div>
 
-    <!-- Conteneur des sections générées dynamiquement -->
     <div id="writeupList"></div>
 
-    <p style="margin-top:18px">
-      <a href="index.html" style="color:inherit;font-weight:700;text-decoration:none">⬅ Retour au portfolio</a>
+    <p style="margin-top:25px">
+      <a href="index.html" style="color:#6ef0d3; font-weight:700; text-decoration:none">⬅ Retour au portfolio</a>
     </p>
   </main>
 
   <footer>
-    <p>© 2026 n40y — Portfolio hébergé sur GitHub Pages</p>
+    <p>© 2026 n40y — Portfolio sur GitHub Pages</p>
   </footer>
 
   <script>
-  // ─── Config marked + highlight ───────────────────────────────────────────
-  marked.setOptions({
-    highlight: (code, lang) => {
-      try {
+    // 1. Config Markdown
+    marked.setOptions({
+      highlight: (code, lang) => {
         if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
         return hljs.highlightAuto(code).value;
-      } catch { return code; }
+      },
+      breaks: true
+    });
+
+    // 2. Gestion Thème
+    function applyTheme(isDark) {
+      const hlTheme = document.getElementById('highlight-theme');
+      document.body.className = isDark ? 'dark-mode' : 'light-mode';
+      document.querySelector('.theme-icon').textContent = isDark ? '☀️' : '🌙';
+      hlTheme.href = isDark 
+        ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
+        : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
     }
-  });
 
-  // ─── Thème ────────────────────────────────────────────────────────────────
-  function applyTheme(isDark) {
-    const hlTheme = document.getElementById('highlight-theme');
-    if (isDark) {
-      document.body.classList.replace('light-mode', 'dark-mode') || document.body.classList.add('dark-mode');
-      document.querySelector('.theme-icon').textContent = '☀️';
-      hlTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css';
-    } else {
-      document.body.classList.replace('dark-mode', 'light-mode') || document.body.classList.add('light-mode');
-      document.querySelector('.theme-icon').textContent = '🌙';
-      hlTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
-    }
-    setTimeout(() => hljs.highlightAll(), 160);
-  }
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const isDark = !document.body.classList.contains('dark-mode');
+      applyTheme(isDark);
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+    applyTheme(localStorage.getItem('theme') !== 'light');
 
-  document.getElementById('theme-toggle').addEventListener('click', () => {
-    const isDark = document.body.classList.contains('dark-mode');
-    applyTheme(!isDark);
-    localStorage.setItem('theme', !isDark ? 'dark' : 'light');
-  });
+    // 3. Logique d'ouverture et chargement (Le Correctif)
+    async function loadAndToggle(h3, contentDiv, entry) {
+      const isOpen = contentDiv.classList.contains('open');
 
-  applyTheme(localStorage.getItem('theme') !== 'light');
-
-  // ─── Accordéon ───────────────────────────────────────────────────────────
-  function attachAccordion(titleEl) {
-    titleEl.addEventListener('click', () => {
-      const content = titleEl.parentElement.querySelector('.writeup-content');
-      if (!content) return;
-      const isOpen = content.classList.contains('open');
-
+      // Fermer les autres accordéons
       document.querySelectorAll('.writeup-content.open').forEach(other => {
-        if (other !== content) {
+        if (other !== contentDiv) {
           other.style.height = '0';
           other.classList.remove('open');
-          other.parentElement.querySelector('.clickable')?.classList.remove('open');
+          other.parentElement.querySelector('.clickable').classList.remove('open');
         }
       });
 
       if (isOpen) {
-        content.style.height = '0';
-        content.classList.remove('open');
-        titleEl.classList.remove('open');
+        contentDiv.style.height = '0';
+        contentDiv.classList.remove('open');
+        h3.classList.remove('open');
       } else {
-        content.classList.add('open');
-        content.style.height = content.scrollHeight + 'px';
-        titleEl.classList.add('open');
-        setTimeout(() => hljs.highlightAll(), 120);
-      }
-    });
-  }
+        // Charger si vide
+        if (!contentDiv.dataset.loaded) {
+          contentDiv.innerHTML = '<div class="loader">Récupération du contenu...</div>';
+          contentDiv.classList.add('open');
+          contentDiv.style.height = '60px'; // Hauteur du loader
 
-  // ─── Badge difficulté ────────────────────────────────────────────────────
-  function diffBadge(diff) {
-    const cls = {
-      'Easy': 'diff-easy', 'Medium': 'diff-medium',
-      'Hard': 'diff-hard',  'Insane': 'diff-insane'
-    }[diff] || 'diff-easy';
-    return `<span class="diff-badge ${cls}">${diff}</span>`;
-  }
-
-  // ─── Chargement d'un writeup .md ─────────────────────────────────────────
-  async function loadWriteup(entry, contentDiv) {
-    contentDiv.innerHTML = '<div class="loader">Chargement...</div>';
-    try {
-      const res = await fetch(entry.file);
-      if (!res.ok) throw new Error('Fichier introuvable');
-      const md = await res.text();
-      contentDiv.innerHTML = marked.parse(md);
-      setTimeout(() => hljs.highlightAll(), 50);
-    } catch (e) {
-      contentDiv.innerHTML = `<p style="color:#e06339">Impossible de charger le writeup : <code>${entry.file}</code></p>`;
-    }
-  }
-
-  // ─── Construction de la page depuis manifest.json ────────────────────────
-  async function buildPage() {
-    const list   = document.getElementById('writeupList');
-    const filters = document.getElementById('filters');
-
-    let manifest;
-    try {
-      const res = await fetch('writeups/manifest.json');
-      manifest  = await res.json();
-    } catch {
-      list.innerHTML = '<p style="color:#e06339;padding:20px">Impossible de charger le manifest.json</p>';
-      return;
-    }
-
-    // Regrouper par plateforme
-    const platforms = {};
-    manifest.forEach(entry => {
-      if (!platforms[entry.platform]) platforms[entry.platform] = [];
-      platforms[entry.platform].push(entry);
-    });
-
-    // Boutons de filtre
-    Object.keys(platforms).forEach(platform => {
-      const btn = document.createElement('button');
-      btn.className = 'filter-btn';
-      btn.dataset.platform = platform;
-      btn.textContent = platform;
-      filters.appendChild(btn);
-    });
-
-    // Filtrage
-    filters.addEventListener('click', e => {
-      const btn = e.target.closest('.filter-btn');
-      if (!btn) return;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const target = btn.dataset.platform;
-      document.querySelectorAll('.platform-section').forEach(section => {
-        section.style.display = (target === 'all' || section.dataset.platform === target) ? '' : 'none';
-      });
-    });
-
-    // Générer les sections
-    Object.entries(platforms).forEach(([platform, entries]) => {
-      const section = document.createElement('section');
-      section.className = 'platform-section';
-      section.dataset.platform = platform;
-      section.innerHTML = `<h2>${platform}</h2>`;
-
-      entries.forEach(entry => {
-        const article = document.createElement('article');
-        article.className = 'writeup-item';
-
-        const h3 = document.createElement('h3');
-        h3.className = 'clickable';
-        h3.innerHTML = `
-          <span style="display:flex;align-items:center;gap:6px;">
-            <span class="title-text">${entry.title}</span>
-            ${diffBadge(entry.difficulty)}
-            ${entry.os ? `<span style="font-size:11px;opacity:0.5;font-weight:400">${entry.os}</span>` : ''}
-          </span>
-          <span style="font-size:11px;opacity:0.4;font-weight:400;margin-right:28px">${entry.date}</span>
-        `;
-
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'writeup-content';
-        contentDiv.setAttribute('aria-hidden', 'true');
-
-        // Chargement au premier clic seulement (lazy loading)
-        let loaded = false;
-        h3.addEventListener('click', () => {
-          if (!loaded) {
-            loaded = true;
-            loadWriteup(entry, contentDiv);
+          try {
+            const res = await fetch(entry.file);
+            if (!res.ok) throw new Error();
+            const md = await res.text();
+            contentDiv.innerHTML = marked.parse(md);
+            contentDiv.dataset.loaded = "true";
+            
+            // Appliquer highlight sur le nouveau contenu
+            contentDiv.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+          } catch {
+            contentDiv.innerHTML = `<p style="color:#e06339">Fichier introuvable : ${entry.file}</p>`;
           }
+        }
+
+        // Calcul de la hauteur après rendu
+        h3.classList.add('open');
+        contentDiv.classList.add('open');
+        
+        // On attend la prochaine frame d'affichage pour calculer la hauteur réelle
+        requestAnimationFrame(() => {
+          contentDiv.style.height = contentDiv.scrollHeight + 'px';
+        });
+      }
+    }
+
+    // 4. Construction de la page
+    async function buildPage() {
+      const list = document.getElementById('writeupList');
+      const filters = document.getElementById('filters');
+
+      try {
+        const res = await fetch('writeups/manifest.json');
+        const manifest = await res.json();
+
+        const platforms = {};
+        manifest.forEach(e => {
+          if (!platforms[e.platform]) platforms[e.platform] = [];
+          platforms[e.platform].push(e);
         });
 
-        attachAccordion(h3);
-        article.appendChild(h3);
-        article.appendChild(contentDiv);
-        section.appendChild(article);
-      });
+        // Boutons filtres
+        Object.keys(platforms).forEach(p => {
+          const btn = document.createElement('button');
+          btn.className = 'filter-btn';
+          btn.dataset.platform = p;
+          btn.textContent = p;
+          filters.appendChild(btn);
+        });
 
-      list.appendChild(section);
-    });
-  }
+        filters.addEventListener('click', (e) => {
+          const btn = e.target.closest('.filter-btn');
+          if (!btn) return;
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const target = btn.dataset.platform;
+          document.querySelectorAll('.platform-section').forEach(s => {
+            s.style.display = (target === 'all' || s.dataset.platform === target) ? '' : 'none';
+          });
+        });
 
-  buildPage();
+        // Sections
+        for (const [platform, entries] of Object.entries(platforms)) {
+          const section = document.createElement('section');
+          section.className = 'platform-section';
+          section.dataset.platform = platform;
+          section.innerHTML = `<h2>${platform}</h2>`;
+
+          entries.forEach(entry => {
+            const article = document.createElement('article');
+            article.className = 'writeup-item';
+
+            const h3 = document.createElement('h3');
+            h3.className = 'clickable';
+            h3.innerHTML = `
+              <span style="display:flex;align-items:center;gap:10px;">
+                <span class="title-text">${entry.title}</span>
+                <span class="diff-badge diff-${entry.difficulty.toLowerCase()}">${entry.difficulty}</span>
+              </span>
+              <span style="font-size:11px;opacity:0.4;margin-right:20px">${entry.date}</span>
+            `;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'writeup-content';
+
+            h3.addEventListener('click', () => loadAndToggle(h3, contentDiv, entry));
+
+            article.appendChild(h3);
+            article.appendChild(contentDiv);
+            section.appendChild(article);
+          });
+          list.appendChild(section);
+        }
+      } catch (err) {
+        list.innerHTML = '<p style="color:#e06339">Erreur : Impossible de charger manifest.json</p>';
+      }
+    }
+
+    buildPage();
   </script>
 </body>
 </html>
