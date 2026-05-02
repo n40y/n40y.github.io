@@ -17,7 +17,6 @@
       background-size: cover;
       background-attachment: fixed;
       overflow-x: hidden;
-      transition: background 0.3s ease, color 0.3s ease;
     }
     body.dark-mode::before {
       content: ""; position: fixed; inset: 0;
@@ -31,97 +30,85 @@
     }
     main {
       position: relative; z-index: 2; max-width: 1100px; margin: 0 auto;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      backdrop-filter: blur(2px); padding: 20px; border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-    body.light-mode main {
-      background: linear-gradient(180deg, rgba(232,236,239,0.6), rgba(245,247,250,0.7));
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-    header h1 { margin: 0 0 6px; font-size: 2rem; color: #6ef0d3; }
-    header p  { margin: 0 0 16px; color: rgba(219,239,255,0.9); }
-
-    .theme-toggle {
-      position: fixed; right: 18px; top: 18px; padding: 8px 12px; border-radius: 10px; border: 0; cursor: pointer;
-      background: linear-gradient(90deg,#1e90ff,#8a2be2); color: #fff;
-      font-weight: 700; box-shadow: 0 6px 18px rgba(0,0,0,0.35); z-index: 9999;
+      background: rgba(10, 10, 15, 0.3);
+      backdrop-filter: blur(10px); padding: 20px; border-radius: 12px;
     }
 
-    .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-    .filter-btn {
-      padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(110,240,211,0.3);
-      background: transparent; color: rgba(219,239,255,0.7); font-size: 13px; cursor: pointer; transition: all 0.2s;
-    }
-    .filter-btn:hover, .filter-btn.active {
-      background: rgba(110,240,211,0.12); border-color: rgba(110,240,211,0.6); color: #6ef0d3;
-    }
-
-    .platform-section {
-      margin-bottom: 26px; padding: 14px; border-radius: 10px;
-      background: rgba(5,8,12,0.55); border: 1px solid rgba(255,255,255,0.03);
-    }
-    .platform-section h2 { margin: 0 0 12px; color: #b16bff; }
-
+    /* --- STRUCTURE DE L'ARTICLE (FIX CHEVAUCHEMENT) --- */
     .writeup-item {
-      margin: 12px 0; padding: 12px; border-radius: 10px;
-      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03);
+      margin: 15px 0;
+      padding: 0; /* On gère le padding à l'intérieur */
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; /* Empêche tout débordement sur le voisin */
+      position: relative;
     }
 
     .clickable {
       cursor: pointer; display: flex; align-items: center; justify-content: space-between;
-      padding-right: 28px; user-select: none; position: relative;
+      padding: 15px 20px; user-select: none; position: relative;
+      background: rgba(255,255,255,0.02);
+      z-index: 5;
     }
-    .clickable .title-text { color: #6ef0d3; font-weight: 600; }
+    .clickable:hover { background: rgba(110,240,211,0.05); }
 
-    .clickable::after {
-      content: '+'; font-size: 1.25rem; font-weight: 700;
-      position: absolute; right: 8px; top: 50%;
-      transform: translateY(-50%); transition: transform 0.2s;
-    }
-    .clickable.open::after { content: '−'; transform: translateY(-50%) rotate(180deg); }
-
-    .diff-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
-    .diff-easy   { background: rgba(57,224,110,.12); color: #39e06e; border: 1px solid rgba(57,224,110,.3); }
-    .diff-medium { background: rgba(224,176,57,.12); color: #e0b039; border: 1px solid rgba(224,176,57,.3); }
-    .diff-hard   { background: rgba(224,99,57,.12);  color: #e06339; border: 1px solid rgba(224,99,57,.3);  }
-    .diff-insane { background: rgba(192,57,224,.12); color: #c039e0; border: 1px solid rgba(192,57,224,.3); }
-
-    /* STRUCTURE ACCORDEON CORRIGEE */
+    /* CONTENEUR DE TRANSITION */
     .writeup-content {
       height: 0;
       overflow: hidden;
-      transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: height 0.4s ease-in-out;
+      background: rgba(0,0,0,0.2);
     }
 
-    /* Le contenu réel est ici */
+    /* WRAPPER INTERNE (POUR LE CALCUL) */
     .writeup-inner {
-      padding: 16px 8px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      padding: 20px;
+      border-top: 1px solid rgba(110,240,211,0.1);
+      box-sizing: border-box;
     }
 
-    .writeup-content.open .writeup-inner {
-      opacity: 1;
+    /* ÉTAT OUVERT : On ne force plus le height:auto via CSS, on le laisse au JS */
+    .writeup-content.open {
+      border-bottom: 1px solid rgba(110,240,211,0.1);
     }
 
-    /* Sécurité ultime : quand l'accordéon est ouvert, on libère la hauteur */
-    .writeup-content.is-visible {
-      height: auto !important;
-      overflow: visible !important;
+    /* --- ÉLÉMENTS GRAPHIQUES --- */
+    .clickable .title-text { color: #6ef0d3; font-weight: 600; font-size: 1.1rem; }
+    .clickable::after {
+      content: '+'; font-size: 1.4rem; color: #6ef0d3;
+      transition: transform 0.3s;
     }
+    .clickable.open::after { content: '−'; transform: rotate(180deg); }
 
-    .loader { text-align: center; padding: 10px; color: #6ef0d3; font-style: italic; font-size: 13px; }
-    
-    .writeup-inner img { max-width: 100%; border-radius: 8px; margin: 15px 0; display: block; }
-    .writeup-inner pre { margin: 15px 0; border-radius: 8px; background: #0d1117 !important; padding: 1em; overflow-x: auto; }
+    .diff-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; margin-left: 10px; }
+    .diff-easy   { background: rgba(57,224,110,.15); color: #39e06e; border: 1px solid #39e06e55; }
+    .diff-medium { background: rgba(224,176,57,.15); color: #e0b039; border: 1px solid #e0b03955; }
+    .diff-hard   { background: rgba(224,99,57,.15);  color: #e06339; border: 1px solid #e0633955; }
+
+    /* MARKDOWN STYLING */
+    .writeup-inner img { max-width: 100%; border-radius: 8px; margin: 20px 0; border: 1px solid rgba(255,255,255,0.1); }
+    .writeup-inner pre { background: #0d1117 !important; padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid #30363d; }
+    .writeup-inner code { font-family: 'Fira Code', monospace; font-size: 0.9em; }
+    .writeup-inner h1, .writeup-inner h2 { color: #b16bff; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
+
+    .theme-toggle {
+      position: fixed; right: 20px; top: 20px; padding: 10px; border-radius: 50%; border: 0; cursor: pointer;
+      background: #1e90ff; color: #fff; z-index: 1000; width: 45px; height: 45px;
+    }
+    .filters { display: flex; gap: 10px; margin-bottom: 25px; }
+    .filter-btn {
+      padding: 8px 18px; border-radius: 20px; border: 1px solid #6ef0d344;
+      background: transparent; color: #6ef0d3aa; cursor: pointer;
+    }
+    .filter-btn.active { background: #6ef0d322; color: #6ef0d3; border-color: #6ef0d3; }
   </style>
 </head>
 
 <body class="dark-mode">
-  <button id="theme-toggle" class="theme-toggle">
-    <span class="theme-icon">☀️</span>
-  </button>
+  <button id="theme-toggle" class="theme-toggle">☀️</button>
 
   <main>
     <header>
@@ -135,17 +122,13 @@
 
     <div id="writeupList"></div>
 
-    <p style="margin-top:25px">
+    <p style="margin-top:30px">
       <a href="index.html" style="color:#6ef0d3; font-weight:700; text-decoration:none">⬅ Retour au portfolio</a>
     </p>
   </main>
 
-  <footer>
-    <p>© 2026 n40y — Portfolio sur GitHub Pages</p>
-  </footer>
-
   <script>
-    // 1. Config Markdown
+    // Config Markdown
     marked.setOptions({
       highlight: (code, lang) => {
         if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
@@ -154,114 +137,72 @@
       breaks: true
     });
 
-    // 2. Thème
-    function applyTheme(isDark) {
-      const hlTheme = document.getElementById('highlight-theme');
-      document.body.className = isDark ? 'dark-mode' : 'light-mode';
-      document.querySelector('.theme-icon').textContent = isDark ? '☀️' : '🌙';
-      hlTheme.href = isDark 
-        ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
-        : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
-    }
-
-    document.getElementById('theme-toggle').addEventListener('click', () => {
-      const isDark = !document.body.classList.contains('dark-mode');
-      applyTheme(isDark);
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    });
-    applyTheme(localStorage.getItem('theme') !== 'light');
-
-    // 3. Logique d'accordéon corrigée
+    // Accordéon avec calcul dynamique de hauteur (Fix Chevauchement)
     async function loadAndToggle(h3, contentDiv, entry) {
       const isOpen = contentDiv.classList.contains('open');
 
-      // Fermer les autres accordéons
+      // Fermer les autres (optionnel, pour la propreté)
       document.querySelectorAll('.writeup-content.open').forEach(other => {
         if (other !== contentDiv) {
-          other.style.height = other.scrollHeight + 'px'; 
-          setTimeout(() => {
-            other.style.height = '0';
-            other.classList.remove('open', 'is-visible');
-            other.parentElement.querySelector('.clickable').classList.remove('open');
-          }, 10);
+          other.style.height = '0px';
+          other.classList.remove('open');
+          other.parentElement.querySelector('.clickable').classList.remove('open');
         }
       });
 
       if (isOpen) {
-        // Fermeture : repasser par les pixels pour l'animation
-        contentDiv.style.height = contentDiv.offsetHeight + 'px';
-        contentDiv.classList.remove('is-visible');
-        setTimeout(() => {
-          contentDiv.style.height = '0';
-          contentDiv.classList.remove('open');
-          h3.classList.remove('open');
-        }, 10);
+        contentDiv.style.height = '0px';
+        contentDiv.classList.remove('open');
+        h3.classList.remove('open');
       } else {
-        // Ouverture
         if (!contentDiv.dataset.loaded) {
-          contentDiv.innerHTML = '<div class="writeup-inner"><div class="loader">Chargement du contenu...</div></div>';
+          contentDiv.innerHTML = '<div class="writeup-inner">Chargement...</div>';
           contentDiv.classList.add('open');
-          contentDiv.style.height = '80px';
+          contentDiv.style.height = 'auto'; // Temporaire pour le chargement
 
           try {
             const res = await fetch(entry.file);
-            if (!res.ok) throw new Error();
             const md = await res.text();
-            
-            // Injection dans le wrapper interne
             contentDiv.innerHTML = `<div class="writeup-inner">${marked.parse(md)}</div>`;
             contentDiv.dataset.loaded = "true";
             
-            // Highlight
-            contentDiv.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+            contentDiv.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
             
-            // Attente des images pour un calcul de hauteur parfait
+            // Attente des images pour le calcul final
             const imgs = contentDiv.querySelectorAll('img');
             await Promise.all(Array.from(imgs).map(img => {
               if (img.complete) return Promise.resolve();
-              return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+              return new Promise(r => { img.onload = r; img.onerror = r; });
             }));
           } catch {
-            contentDiv.innerHTML = '<div class="writeup-inner"><p style="color:#e06339">Fichier introuvable.</p></div>';
+            contentDiv.innerHTML = '<div class="writeup-inner">Erreur de chargement.</div>';
           }
         }
 
         h3.classList.add('open');
         contentDiv.classList.add('open');
-        
-        // Calcul de la hauteur après rendu
-        requestAnimationFrame(() => {
-          const inner = contentDiv.querySelector('.writeup-inner');
-          const targetHeight = inner.offsetHeight;
-          contentDiv.style.height = targetHeight + 'px';
 
-          // Une fois l'animation terminée, on libère la hauteur
-          setTimeout(() => {
-            if (contentDiv.classList.contains('open')) {
-              contentDiv.classList.add('is-visible');
-            }
-          }, 450);
-        });
+        // CALCUL DE LA HAUTEUR REELLE
+        const inner = contentDiv.querySelector('.writeup-inner');
+        const height = inner.getBoundingClientRect().height;
+        contentDiv.style.height = height + 'px';
+
+        // Fix final : On laisse en pixels pour forcer le parent à s'étendre
+        // sans utiliser height:auto qui casse parfois les transitions
       }
     }
 
-    // 4. Build de la page
+    // Chargement du JSON et création du DOM
     async function buildPage() {
       const list = document.getElementById('writeupList');
       const filters = document.getElementById('filters');
 
       try {
         const res = await fetch('writeups/writeups.json');
-        if (!res.ok) throw new Error();
         const manifest = await res.json();
+        const platforms = [...new Set(manifest.map(e => e.platform))];
 
-        const platforms = {};
-        manifest.forEach(e => {
-          if (!platforms[e.platform]) platforms[e.platform] = [];
-          platforms[e.platform].push(e);
-        });
-
-        Object.keys(platforms).forEach(p => {
+        platforms.forEach(p => {
           const btn = document.createElement('button');
           btn.className = 'filter-btn';
           btn.dataset.platform = p;
@@ -270,53 +211,60 @@
         });
 
         filters.addEventListener('click', (e) => {
-          const btn = e.target.closest('.filter-btn');
-          if (!btn) return;
+          if (!e.target.classList.contains('filter-btn')) return;
           document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          const target = btn.dataset.platform;
+          e.target.classList.add('active');
+          const p = e.target.dataset.platform;
           document.querySelectorAll('.platform-section').forEach(s => {
-            s.style.display = (target === 'all' || s.dataset.platform === target) ? '' : 'none';
+            s.style.display = (p === 'all' || s.dataset.platform === p) ? '' : 'none';
           });
         });
 
-        for (const [platform, entries] of Object.entries(platforms)) {
-          const section = document.createElement('section');
-          section.className = 'platform-section';
-          section.dataset.platform = platform;
-          section.innerHTML = `<h2>${platform}</h2>`;
+        const grouped = manifest.reduce((acc, obj) => {
+          acc[obj.platform] = acc[obj.platform] || [];
+          acc[obj.platform].push(obj);
+          return acc;
+        }, {});
+
+        for (const [plat, entries] of Object.entries(grouped)) {
+          const sec = document.createElement('section');
+          sec.className = 'platform-section';
+          sec.dataset.platform = plat;
+          sec.innerHTML = `<h2 style="color:#b16bff; margin-top:30px;">${plat}</h2>`;
 
           entries.forEach(entry => {
-            const article = document.createElement('article');
-            article.className = 'writeup-item';
-
-            const h3 = document.createElement('h3');
-            h3.className = 'clickable';
-            h3.innerHTML = `
-              <span style="display:flex;align-items:center;gap:10px;">
-                <span class="title-text">${entry.title}</span>
-                <span class="diff-badge diff-${entry.difficulty.toLowerCase()}">${entry.difficulty}</span>
-              </span>
-              <span style="font-size:11px;opacity:0.4;margin-right:20px">${entry.date}</span>
+            const art = document.createElement('article');
+            art.className = 'writeup-item';
+            art.innerHTML = `
+              <div class="clickable">
+                <span>
+                  <span class="title-text">${entry.title}</span>
+                  <span class="diff-badge diff-${entry.difficulty.toLowerCase()}">${entry.difficulty}</span>
+                </span>
+                <span style="font-size:0.8rem; opacity:0.5; margin-right:40px;">${entry.date}</span>
+              </div>
+              <div class="writeup-content"></div>
             `;
-
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'writeup-content';
-
-            h3.addEventListener('click', () => loadAndToggle(h3, contentDiv, entry));
-
-            article.appendChild(h3);
-            article.appendChild(contentDiv);
-            section.appendChild(article);
+            
+            const btn = art.querySelector('.clickable');
+            const cont = art.querySelector('.writeup-content');
+            btn.onclick = () => loadAndToggle(btn, cont, entry);
+            sec.appendChild(art);
           });
-          list.appendChild(section);
+          list.appendChild(sec);
         }
-      } catch (err) {
-        list.innerHTML = `<p style="color:#e06339; padding: 20px;">Erreur lors du chargement du fichier JSON.</p>`;
+      } catch (e) {
+        list.innerHTML = "Erreur de chargement du catalogue.";
       }
     }
 
     buildPage();
+
+    // Thème simple
+    document.getElementById('theme-toggle').onclick = () => {
+      document.body.classList.toggle('light-mode');
+      document.body.classList.toggle('dark-mode');
+    };
   </script>
 </body>
 </html>
