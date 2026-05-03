@@ -129,7 +129,7 @@ ssh sedric@10.129.27.34
 # Password: snowflake1
 
 cat ~/user.txt
-# d26b1ce0fbf7c3c24bb585664d1b7c5e
+# user_flag{*****************************}
 ```
 
 ---
@@ -192,7 +192,7 @@ with urllib.request.urlopen(req) as r:
 ```
 
 ```
-Patient c71dc9a3d4fae7d323ff387197b17130
+Patient root_flag{*****************************}
  Doe (M), 41 years old, received from MirthConnect at 20240308143022
 ```
 
@@ -203,8 +203,8 @@ Le flag root apparaît à la place du prénom — exécuté dans le contexte du 
 ## Flags
 
 ```
-user.txt  →  d26b1ce0fbf7c3c24bb585664d1b7c5e
-root.txt  →  c71dc9a3d4fae7d323ff387197b17130
+user.txt  →  user_flag{*****************************}
+root.txt  →  root_flag{*****************************}
 ```
 
 ---
