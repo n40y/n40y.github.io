@@ -24,11 +24,27 @@
     "file": "writeups/htb-Planning.md"
   },
   {
-    "platform": "TryHackMe",
-    "title": "WhiteRose",
-    "difficulty": "Easy",
-    "os": "Linux",
-    "date": "2025-01-22",
-    "file": "writeups/thm-whiterose.md"
-  }
+  "platform": "HackTheBox",
+  "title": "Interpreter",
+  "difficulty": "Medium",
+  "os": "Linux",
+  "date": "2026-04-11",
+  "file": "writeups/htb-interpreter.md"
+},
+{
+  "platform": "HackTheBox",
+  "title": "Support",
+  "difficulty": "Easy",
+  "os": "Windows",
+  "date": "2026-04-28",
+  "file": "writeups/htb-support.md"
+},
+{
+  "platform": "TryHackMe",
+  "title": "WhiteRose",
+  "difficulty": "Easy",
+  "os": "Linux",
+  "date": "2025-01-22",
+  "file": "writeups/thm-whiterose.md"
+}
 ]
