@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>n40y - Writeups CTF</title>
 
-  <!-- Bibliothèques externes -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link id="highlight-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -28,82 +27,155 @@
       background: linear-gradient(180deg, rgba(232,236,239,0.2), rgba(245,247,250,0.4));
       z-index: -2;
     }
+
     main {
-      position: relative; z-index: 2; max-width: 1100px; margin: 0 auto;
+      position: relative; z-index: 2;
+      max-width: 1100px; margin: 0 auto;
       background: rgba(10, 10, 15, 0.3);
-      backdrop-filter: blur(10px); padding: 20px; border-radius: 12px;
+      backdrop-filter: blur(10px);
+      padding: 20px; border-radius: 12px;
     }
 
-    /* --- STRUCTURE DE L'ARTICLE (FIX CHEVAUCHEMENT) --- */
+    /* ── Writeup card ─────────────────────────────── */
     .writeup-item {
       margin: 15px 0;
-      padding: 0; /* On gère le padding à l'intérieur */
       border-radius: 10px;
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.05);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden; /* Empêche tout débordement sur le voisin */
-      position: relative;
+      overflow: hidden;   /* indispensable pour couper le contenu à height:0 */
     }
 
+    /* ── Titre cliquable ──────────────────────────── */
     .clickable {
-      cursor: pointer; display: flex; align-items: center; justify-content: space-between;
-      padding: 15px 20px; user-select: none; position: relative;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 15px 20px;
+      user-select: none;
       background: rgba(255,255,255,0.02);
-      z-index: 5;
+      transition: background 0.2s;
     }
     .clickable:hover { background: rgba(110,240,211,0.05); }
+    .clickable .title-text { color: #6ef0d3; font-weight: 600; font-size: 1.1rem; }
+    .clickable::after {
+      content: '+'; font-size: 1.4rem; color: #6ef0d3;
+      transition: transform 0.35s;
+      flex-shrink: 0;
+    }
+    .clickable.open::after { content: '−'; transform: rotate(180deg); }
 
-    /* CONTENEUR DE TRANSITION */
+    /* ── Accordéon ────────────────────────────────── */
+    /*
+      Principe :
+        - fermé  → height: 0 ; overflow: hidden
+        - ouvert → height: Npx (calculé via scrollHeight)
+                   puis, après transition → height: auto (pour le resize)
+        - pour fermer depuis auto → on force d'abord la valeur en px, puis on
+          passe à 0 au prochain frame (sinon la transition est ignorée)
+    */
     .writeup-content {
       height: 0;
       overflow: hidden;
-      transition: height 0.4s ease-in-out;
-      background: rgba(0,0,0,0.2);
+      transition: height 0.4s ease;
     }
 
-    /* WRAPPER INTERNE (POUR LE CALCUL) */
+    /* Wrapper interne — c'est lui qu'on mesure */
     .writeup-inner {
       padding: 20px;
       border-top: 1px solid rgba(110,240,211,0.1);
       box-sizing: border-box;
     }
 
-    /* ÉTAT OUVERT : On ne force plus le height:auto via CSS, on le laisse au JS */
-    .writeup-content.open {
-      border-bottom: 1px solid rgba(110,240,211,0.1);
+    /* ── Loader ───────────────────────────────────── */
+    .writeup-loader {
+      padding: 20px;
+      color: #6ef0d3aa;
+      font-family: monospace;
+      font-size: 0.9rem;
     }
 
-    /* --- ÉLÉMENTS GRAPHIQUES --- */
-    .clickable .title-text { color: #6ef0d3; font-weight: 600; font-size: 1.1rem; }
-    .clickable::after {
-      content: '+'; font-size: 1.4rem; color: #6ef0d3;
-      transition: transform 0.3s;
+    /* ── Badges ───────────────────────────────────── */
+    .diff-badge {
+      font-size: 10px; font-weight: 700;
+      padding: 3px 8px; border-radius: 4px;
+      text-transform: uppercase; margin-left: 10px;
     }
-    .clickable.open::after { content: '−'; transform: rotate(180deg); }
+    .diff-easy   { background: rgba(57,224,110,.15);  color: #39e06e; border: 1px solid #39e06e55; }
+    .diff-medium { background: rgba(224,176,57,.15);  color: #e0b039; border: 1px solid #e0b03955; }
+    .diff-hard   { background: rgba(224,99,57,.15);   color: #e06339; border: 1px solid #e0633955; }
+    .diff-insane { background: rgba(192,57,224,.15);  color: #c039e0; border: 1px solid #c039e055; }
 
-    .diff-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; margin-left: 10px; }
-    .diff-easy   { background: rgba(57,224,110,.15); color: #39e06e; border: 1px solid #39e06e55; }
-    .diff-medium { background: rgba(224,176,57,.15); color: #e0b039; border: 1px solid #e0b03955; }
-    .diff-hard   { background: rgba(224,99,57,.15);  color: #e06339; border: 1px solid #e0633955; }
-
-    /* MARKDOWN STYLING */
-    .writeup-inner img { max-width: 100%; border-radius: 8px; margin: 20px 0; border: 1px solid rgba(255,255,255,0.1); }
-    .writeup-inner pre { background: #0d1117 !important; padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid #30363d; }
-    .writeup-inner code { font-family: 'Fira Code', monospace; font-size: 0.9em; }
-    .writeup-inner h1, .writeup-inner h2 { color: #b16bff; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
-
-    .theme-toggle {
-      position: fixed; right: 20px; top: 20px; padding: 10px; border-radius: 50%; border: 0; cursor: pointer;
-      background: #1e90ff; color: #fff; z-index: 1000; width: 45px; height: 45px;
+    /* ── Markdown ─────────────────────────────────── */
+    .writeup-inner h1, .writeup-inner h2 {
+      color: #b16bff;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 5px; margin-top: 20px;
     }
-    .filters { display: flex; gap: 10px; margin-bottom: 25px; }
+    .writeup-inner h3 { color: #6ef0d3; margin-top: 15px; }
+    .writeup-inner p  { margin: 10px 0; line-height: 1.7; }
+    .writeup-inner ul { margin: 8px 0 8px 20px; }
+    .writeup-inner a  { color: #6ef0d3; }
+    .writeup-inner blockquote {
+      border-left: 3px solid #b16bff;
+      padding: 8px 14px; margin: 14px 0;
+      background: rgba(177,107,255,0.07);
+      border-radius: 0 6px 6px 0;
+      font-style: italic;
+    }
+    .writeup-inner pre {
+      background: #0d1117 !important;
+      padding: 16px; border-radius: 8px;
+      overflow-x: auto;
+      border: 1px solid #30363d;
+      margin: 16px 0;
+      /* IMPORTANT : pas de white-space:pre-wrap ici — on laisse hljs gérer */
+    }
+    .writeup-inner code {
+      font-family: 'Fira Code', 'Hack', monospace;
+      font-size: 0.9em;
+    }
+    .writeup-inner img {
+      max-width: 100%; border-radius: 8px;
+      margin: 16px 0; border: 1px solid rgba(255,255,255,0.1);
+      display: block;
+    }
+    .writeup-inner table { width: 100%; border-collapse: collapse; margin: 14px 0; }
+    .writeup-inner th, .writeup-inner td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      text-align: left;
+    }
+    .writeup-inner th { color: #6ef0d3; }
+
+    /* ── Filtres ──────────────────────────────────── */
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
     .filter-btn {
-      padding: 8px 18px; border-radius: 20px; border: 1px solid #6ef0d344;
-      background: transparent; color: #6ef0d3aa; cursor: pointer;
+      padding: 8px 18px; border-radius: 20px;
+      border: 1px solid #6ef0d344;
+      background: transparent; color: #6ef0d3aa;
+      cursor: pointer; transition: all 0.2s;
     }
-    .filter-btn.active { background: #6ef0d322; color: #6ef0d3; border-color: #6ef0d3; }
+    .filter-btn.active, .filter-btn:hover {
+      background: #6ef0d322; color: #6ef0d3; border-color: #6ef0d3;
+    }
+
+    /* ── Theme toggle ─────────────────────────────── */
+    .theme-toggle {
+      position: fixed; right: 20px; top: 20px;
+      border-radius: 50%; border: 0; cursor: pointer;
+      background: #1e90ff; color: #fff;
+      z-index: 1000; width: 45px; height: 45px;
+      font-size: 1.2rem;
+    }
+
+    /* ── Light mode overrides ─────────────────────── */
+    body.light-mode .writeup-item    { background: rgba(245,247,250,0.8); border-color: #e9ecef; }
+    body.light-mode .clickable       { background: rgba(245,247,250,0.5); }
+    body.light-mode .clickable .title-text { color: #5dade2; }
+    body.light-mode .clickable::after      { color: #5dade2; }
+    body.light-mode .writeup-inner h1,
+    body.light-mode .writeup-inner h2      { color: #bb8fce; }
+    body.light-mode .writeup-inner h3      { color: #5dade2; }
+    body.light-mode .writeup-inner pre     { background: #f1f3f4 !important; color: #3498db; border-color: #dee2e6; }
   </style>
 </head>
 
@@ -128,143 +200,207 @@
   </main>
 
   <script>
-    // Config Markdown
+    // ── marked config ──────────────────────────────────────────────────────────
     marked.setOptions({
       highlight: (code, lang) => {
-        if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
-        return hljs.highlightAuto(code).value;
+        try {
+          if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
+          return hljs.highlightAuto(code).value;
+        } catch { return code; }
       },
       breaks: true
     });
 
-    // Accordéon avec calcul dynamique de hauteur (Fix Chevauchement)
-    async function loadAndToggle(h3, contentDiv, entry) {
-      const isOpen = contentDiv.classList.contains('open');
-
-      // Fermer les autres (optionnel, pour la propreté)
-      document.querySelectorAll('.writeup-content.open').forEach(other => {
-        if (other !== contentDiv) {
-          other.style.height = '0px';
-          other.classList.remove('open');
-          other.parentElement.querySelector('.clickable').classList.remove('open');
+    // ── Utilitaire : ouvrir un accordéon ──────────────────────────────────────
+    function openAccordion(btn, content) {
+      btn.classList.add('open');
+      content.classList.add('open');
+      // scrollHeight inclut le padding et le contenu réel
+      content.style.height = content.scrollHeight + 'px';
+      // Après la transition → height:auto pour permettre le resize du navigateur
+      content.addEventListener('transitionend', () => {
+        if (content.classList.contains('open')) {
+          content.style.height = 'auto';
         }
-      });
-
-      if (isOpen) {
-        contentDiv.style.height = '0px';
-        contentDiv.classList.remove('open');
-        h3.classList.remove('open');
-      } else {
-        if (!contentDiv.dataset.loaded) {
-          contentDiv.innerHTML = '<div class="writeup-inner">Chargement...</div>';
-          contentDiv.classList.add('open');
-          contentDiv.style.height = 'auto'; // Temporaire pour le chargement
-
-          try {
-            const res = await fetch(entry.file);
-            const md = await res.text();
-            contentDiv.innerHTML = `<div class="writeup-inner">${marked.parse(md)}</div>`;
-            contentDiv.dataset.loaded = "true";
-            
-            contentDiv.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
-            
-            // Attente des images pour le calcul final
-            const imgs = contentDiv.querySelectorAll('img');
-            await Promise.all(Array.from(imgs).map(img => {
-              if (img.complete) return Promise.resolve();
-              return new Promise(r => { img.onload = r; img.onerror = r; });
-            }));
-          } catch {
-            contentDiv.innerHTML = '<div class="writeup-inner">Erreur de chargement.</div>';
-          }
-        }
-
-        h3.classList.add('open');
-        contentDiv.classList.add('open');
-
-        // CALCUL DE LA HAUTEUR REELLE
-        const inner = contentDiv.querySelector('.writeup-inner');
-        const height = inner.getBoundingClientRect().height;
-        contentDiv.style.height = height + 'px';
-
-        // Fix final : On laisse en pixels pour forcer le parent à s'étendre
-        // sans utiliser height:auto qui casse parfois les transitions
-      }
+      }, { once: true });
     }
 
-    // Chargement du JSON et création du DOM
+    // ── Utilitaire : fermer un accordéon ──────────────────────────────────────
+    function closeAccordion(btn, content) {
+      // Si on est en height:auto, il faut d'abord fixer une valeur en px
+      // sinon la transition de px → 0 ne se déclenche pas
+      if (content.style.height === 'auto' || content.style.height === '') {
+        content.style.height = content.scrollHeight + 'px';
+      }
+      // Forcer le reflow pour que le navigateur prenne en compte la valeur px
+      content.getBoundingClientRect();
+      // Maintenant on peut animer vers 0
+      content.style.height = '0';
+      content.classList.remove('open');
+      btn.classList.remove('open');
+    }
+
+    // ── Fermer tous les autres accordéons ─────────────────────────────────────
+    function closeAllExcept(exceptContent) {
+      document.querySelectorAll('.writeup-content.open').forEach(other => {
+        if (other !== exceptContent) {
+          const otherBtn = other.closest('.writeup-item').querySelector('.clickable');
+          closeAccordion(otherBtn, other);
+        }
+      });
+    }
+
+    // ── Chargement + toggle d'un writeup ──────────────────────────────────────
+    async function toggleWriteup(btn, content, entry) {
+      const isOpen = content.classList.contains('open');
+
+      if (isOpen) {
+        closeAccordion(btn, content);
+        return;
+      }
+
+      closeAllExcept(content);
+
+      // Chargement du markdown si pas encore fait
+      if (!content.dataset.loaded) {
+        content.innerHTML = '<div class="writeup-loader">⏳ Chargement...</div>';
+        // Ouvre temporairement pour afficher le loader
+        openAccordion(btn, content);
+
+        try {
+          const res = await fetch(entry.file);
+          if (!res.ok) throw new Error(res.status);
+          const md = await res.text();
+          content.innerHTML = `<div class="writeup-inner">${marked.parse(md)}</div>`;
+          content.dataset.loaded = 'true';
+          content.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+
+          // Recalcule la hauteur après rendu du contenu complet
+          // On force height:auto → px pour avoir la vraie valeur
+          content.style.height = 'auto';
+          const realHeight = content.scrollHeight;
+          content.style.height = realHeight + 'px';
+          // Repasse en auto après que la valeur est appliquée
+          requestAnimationFrame(() => {
+            content.style.height = 'auto';
+          });
+
+        } catch (err) {
+          content.innerHTML = `<div class="writeup-inner" style="color:#e06339">
+            ❌ Impossible de charger <code>${entry.file}</code>
+          </div>`;
+        }
+        return;
+      }
+
+      // Contenu déjà chargé : ouvre directement
+      openAccordion(btn, content);
+    }
+
+    // ── Construction de la page depuis writeups.json ───────────────────────────
     async function buildPage() {
-      const list = document.getElementById('writeupList');
+      const list    = document.getElementById('writeupList');
       const filters = document.getElementById('filters');
 
+      let manifest;
       try {
         const res = await fetch('writeups/writeups.json');
-        const manifest = await res.json();
-        const platforms = [...new Set(manifest.map(e => e.platform))];
+        manifest  = await res.json();
+      } catch {
+        list.innerHTML = '<p style="color:#e06339">❌ Impossible de charger writeups/writeups.json</p>';
+        return;
+      }
 
-        platforms.forEach(p => {
-          const btn = document.createElement('button');
-          btn.className = 'filter-btn';
-          btn.dataset.platform = p;
-          btn.textContent = p;
-          filters.appendChild(btn);
+      // Trie par date décroissante
+      manifest.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      // Boutons de filtre par plateforme
+      const platforms = [...new Set(manifest.map(e => e.platform))];
+      platforms.forEach(p => {
+        const btn = document.createElement('button');
+        btn.className   = 'filter-btn';
+        btn.dataset.platform = p;
+        btn.textContent = p;
+        filters.appendChild(btn);
+      });
+
+      filters.addEventListener('click', e => {
+        if (!e.target.classList.contains('filter-btn')) return;
+        filters.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        const p = e.target.dataset.platform;
+        document.querySelectorAll('.platform-section').forEach(s => {
+          s.style.display = (p === 'all' || s.dataset.platform === p) ? '' : 'none';
+        });
+      });
+
+      // Groupe par plateforme (ordre d'apparition dans le JSON)
+      const grouped = {};
+      manifest.forEach(entry => {
+        if (!grouped[entry.platform]) grouped[entry.platform] = [];
+        grouped[entry.platform].push(entry);
+      });
+
+      // Génère les sections
+      for (const [platform, entries] of Object.entries(grouped)) {
+        const section = document.createElement('section');
+        section.className       = 'platform-section';
+        section.dataset.platform = platform;
+        section.innerHTML       = `<h2 style="color:#b16bff; margin: 20px 0 10px;">${platform}</h2>`;
+
+        entries.forEach(entry => {
+          const diffClass = (entry.difficulty || 'easy').toLowerCase();
+          const dateStr   = entry.date
+            ? new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+            : '';
+
+          const article = document.createElement('article');
+          article.className = 'writeup-item';
+          article.innerHTML = `
+            <div class="clickable">
+              <span>
+                <span class="title-text">${entry.title}</span>
+                <span class="diff-badge diff-${diffClass}">${entry.difficulty}</span>
+                ${entry.os ? `<span style="font-size:11px;opacity:.5;margin-left:8px;">${entry.os}</span>` : ''}
+              </span>
+              <span style="font-size:0.8rem; opacity:0.45; margin-right:40px; flex-shrink:0;">${dateStr}</span>
+            </div>
+            <div class="writeup-content"></div>
+          `;
+
+          const btn     = article.querySelector('.clickable');
+          const content = article.querySelector('.writeup-content');
+          btn.addEventListener('click', () => toggleWriteup(btn, content, entry));
+
+          section.appendChild(article);
         });
 
-        filters.addEventListener('click', (e) => {
-          if (!e.target.classList.contains('filter-btn')) return;
-          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-          e.target.classList.add('active');
-          const p = e.target.dataset.platform;
-          document.querySelectorAll('.platform-section').forEach(s => {
-            s.style.display = (p === 'all' || s.dataset.platform === p) ? '' : 'none';
-          });
-        });
-
-        const grouped = manifest.reduce((acc, obj) => {
-          acc[obj.platform] = acc[obj.platform] || [];
-          acc[obj.platform].push(obj);
-          return acc;
-        }, {});
-
-        for (const [plat, entries] of Object.entries(grouped)) {
-          const sec = document.createElement('section');
-          sec.className = 'platform-section';
-          sec.dataset.platform = plat;
-          sec.innerHTML = `<h2 style="color:#b16bff; margin-top:30px;">${plat}</h2>`;
-
-          entries.forEach(entry => {
-            const art = document.createElement('article');
-            art.className = 'writeup-item';
-            art.innerHTML = `
-              <div class="clickable">
-                <span>
-                  <span class="title-text">${entry.title}</span>
-                  <span class="diff-badge diff-${entry.difficulty.toLowerCase()}">${entry.difficulty}</span>
-                </span>
-                <span style="font-size:0.8rem; opacity:0.5; margin-right:40px;">${entry.date}</span>
-              </div>
-              <div class="writeup-content"></div>
-            `;
-            
-            const btn = art.querySelector('.clickable');
-            const cont = art.querySelector('.writeup-content');
-            btn.onclick = () => loadAndToggle(btn, cont, entry);
-            sec.appendChild(art);
-          });
-          list.appendChild(sec);
-        }
-      } catch (e) {
-        list.innerHTML = "Erreur de chargement du catalogue.";
+        list.appendChild(section);
       }
     }
 
     buildPage();
 
-    // Thème simple
-    document.getElementById('theme-toggle').onclick = () => {
-      document.body.classList.toggle('light-mode');
-      document.body.classList.toggle('dark-mode');
-    };
+    // ── Thème ──────────────────────────────────────────────────────────────────
+    const themeBtn = document.getElementById('theme-toggle');
+    const hlTheme  = document.getElementById('highlight-theme');
+
+    function applyTheme(dark) {
+      document.body.classList.toggle('dark-mode',  dark);
+      document.body.classList.toggle('light-mode', !dark);
+      themeBtn.textContent = dark ? '☀️' : '🌙';
+      hlTheme.href = dark
+        ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
+        : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
+    }
+
+    applyTheme(localStorage.getItem('theme') !== 'light');
+
+    themeBtn.addEventListener('click', () => {
+      const dark = !document.body.classList.contains('dark-mode');
+      applyTheme(dark);
+      localStorage.setItem('theme', dark ? 'dark' : 'light');
+    });
   </script>
 </body>
 </html>
