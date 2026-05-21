@@ -1,6 +1,14 @@
 [
   {
     "platform": "HackTheBox",
+    "title": "Principal",
+    "difficulty": "Medium",
+    "os": "Linux",
+    "date": "2026-05-20",
+    "file": "writeups/htb-Principal.md"
+  },
+  {
+    "platform": "HackTheBox",
     "title": "Kobold",
     "difficulty": "Easy",
     "os": "Linux",
