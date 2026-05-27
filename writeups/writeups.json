@@ -1,6 +1,14 @@
 [
   {
     "platform": "HackTheBox",
+    "title": "SmartHire",
+    "difficulty": "Medium",
+    "os": "Linux Ubuntu",
+    "date": "2026-05-23",
+    "file": "writeups/htb-SmartHire.md"
+  },
+  {
+    "platform": "HackTheBox",
     "title": "Principal",
     "difficulty": "Medium",
     "os": "Linux",
