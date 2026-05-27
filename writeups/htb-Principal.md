@@ -1,4 +1,4 @@
-# HTB — Principal · Linux · Medium
+# HTB — Principal · Linux · (Medium)
 
 **IP :** `10.129.59.71` &nbsp;|&nbsp; **Date :** 19 Mai 2026 &nbsp;|&nbsp; **Outils :** nmap · feroxbuster · curl · Python · ssh-keygen
 
