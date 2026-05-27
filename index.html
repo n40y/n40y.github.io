@@ -106,16 +106,17 @@
           Initialement, je voulais faire un outil ressemblant à Nuclei pour la partie code collaboratif (https://projectdiscovery.io/), mais pour les environnements AD.<br>
           J'aime bien ce concept, où tout le monde peut créer un bout de code sur mesure, et l'intégrer dans la codebase de l'outil, afin que d'autre testeurs s'en servent.<br><br>
           
-          Je me sers souvent de Nuclei, Impacket, NetExec, blodHound. Ils sont incontournables, surtout les trois derniers pour ce qui touche aux protocoles utilisés dans windows.<br>
+          Je me sers souvent de Nuclei, Impacket, NetExec, BloodHound. Ils sont incontournables, surtout les trois derniers pour ce qui touche aux protocoles utilisés dans windows.<br>
           Donc j'ai pensé, "eh pourquoi ne pas recoder ces outils, avec un langage un peu plus rapide que le python? "<br>
-          (Python -> interprété ; Go -> compilé)<br><br>
+          <em>(Python -> interprété ; Go -> compilé)</em><br><br>
           
-          Pour ceux qui on déjà écrit du code en C/C++ ou Golang ou autre lanagages compilés, ils savent que ce n'est pas si facile. IL faut penser à tout, afin d'éviter les bugs fantômes.
+          Pour ceux qui on déjà écrit du code en C/C++ ou Golang ou autre lanagages compilés, ce n'est pas si facile. <br>
+          Il faut penser à tout, afin d'éviter les bugs fantômes, ou bug de mémoire.<br>
           J'ai essayé de coder en gardant en tête 3 points:
           <ul>
-            <li> 1. L'efficacité,</li>
-            <li> 2. La facilité d'utilisation,</li>
-            <li> 3. Un style agréable à l'oeil dans le terminal (car pourquoi faire un truc moche)</li>
+              <li>  1. L'efficacité,</li>
+              <li>  2. La facilité d'utilisation,</li>
+              <li>  3. Un style agréable à l'oeil dans le terminal (car pourquoi faire un truc moche)</li>
           </ul>
           <br>
           Je me suis aidé avec les documentations techniques des différents modules Go utilisés.
@@ -123,7 +124,8 @@
           L'IA m'a pas mal aidé avec les problèmes causés sur Github, lors des différentes mises en lignes du code. 
           La plateforme n'acceptaient que certaines versions de modules.<br><br>
           
-          J'ai grandement sous-estimé la partie <strong>maintenance du code dans le temps</strong><br>
+          J'ai grandement sous-estimé la partie <strong>maintenance du code dans le temps</strong>
+        <br>
         
           <strong>Conclusion</strong>: J'ai revu mes ambitions à la baisse.<br>
           Sur ce projet, en tout cas!
