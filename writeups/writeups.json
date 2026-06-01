@@ -59,6 +59,14 @@
   // ====== TRYHACKME =====
   {
   "platform": "TryHackMe",
+  "title": "LazyAdmin",
+  "difficulty": "Easy",
+  "os": "Linux",
+  "date": "2026-05-31",
+  "file": "writeups/thm-lazyadmin.md"
+}
+  {
+  "platform": "TryHackMe",
   "title": "Athena",
   "difficulty": "Medium",
   "os": "Linux",
