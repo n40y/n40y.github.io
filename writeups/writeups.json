@@ -59,6 +59,14 @@
   // ====== TRYHACKME =====
   {
   "platform": "TryHackMe",
+  "title": "Pyrat",
+  "difficulty": "Easy",
+  "os": "Linux",
+  "date": "2026-04-10",
+  "file": "writeups/thm-pyrat.md"
+}
+  {
+  "platform": "TryHackMe",
   "title": "LazyAdmin",
   "difficulty": "Easy",
   "os": "Linux",
