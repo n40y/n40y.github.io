@@ -59,6 +59,14 @@
   // ====== TRYHACKME =====
   {
   "platform": "TryHackMe",
+  "title": "VulnNet Active",
+  "difficulty": "Medium",
+  "os": "Linux",
+  "date": "2025-06-16",
+  "file": "writeups/thm-vulnnetactive.md"
+}
+  {
+  "platform": "TryHackMe",
   "title": "Pyrat",
   "difficulty": "Easy",
   "os": "Linux",
