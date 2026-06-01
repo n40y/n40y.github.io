@@ -56,6 +56,14 @@
   "file": "writeups/htb-support.md"
 },
   // ====== TRYHACKME =====
+  {
+  "platform": "TryHackMe",
+  "title": "Athena",
+  "difficulty": "Medium",
+  "os": "Linux",
+  "date": "2026-05-28",
+  "file": "writeups/thm-athena.md"
+}
 {
   "platform": "TryHackMe",
   "title": "WhiteRose",
