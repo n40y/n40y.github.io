@@ -3,7 +3,7 @@
 **Difficulté :** Easy  
 **OS :** Linux (Ubuntu)  
 **Date :** 2026-05-31  
-**Auteur :** Fr3nch4Sec  
+**Auteur :** N40y
 
 ---
 
