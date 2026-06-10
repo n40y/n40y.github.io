@@ -1,6 +1,14 @@
 [
   {
     "platform": "HackTheBox",
+    "title": "TombWatcher",
+    "difficulty": "Medium",
+    "os": "Linux Ubuntu",
+    "date": "2024-12-23",
+    "file": "writeups/htb-tombwatcher.md"
+  },
+  {
+    "platform": "HackTheBox",
     "title": "SmartHire",
     "difficulty": "Medium",
     "os": "Linux Ubuntu",
