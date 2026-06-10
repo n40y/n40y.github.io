@@ -3,7 +3,7 @@
     "platform": "HackTheBox",
     "title": "TombWatcher",
     "difficulty": "Medium",
-    "os": "Linux Ubuntu",
+    "os": "Windows Server 2019",
     "date": "2024-12-23",
     "file": "writeups/htb-tombwatcher.md"
   },
