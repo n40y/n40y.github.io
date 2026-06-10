@@ -66,13 +66,13 @@ bloodhound-python -u henry -p 'H3nry_987TGV!' -d tombwatcher.htb \
 
 #### Mapping des membres du domaine
 
-![BloodHound — Membres du groupe EVERYONE](Mapping.png)
+![BloodHound — Membres du groupe EVERYONE](images/tombwatcher/Mapping.png)
 
 On voit que le groupe `EVERYONE@TOMBWATCHER.HTB` regroupe l'ensemble des utilisateurs du domaine via `DOMAIN USERS`.
 
 #### Chemin vers l'administrateur
 
-![BloodHound — Chemin user → Administrator](user_to_admin_path.png)
+![BloodHound — Chemin user → Administrator](images/tombwatcher/user_to_admin_path.png)
 
 BloodHound révèle que le groupe `ADMINISTRATORS@TOMBWATCHER.HTB` possède des permissions critiques sur l'objet `USERS@TOMBWATCHER.HTB` :
 - **WriteOwner**
@@ -82,7 +82,7 @@ BloodHound révèle que le groupe `ADMINISTRATORS@TOMBWATCHER.HTB` possède des 
 
 #### Détail de la permission WriteOwner
 
-![BloodHound — Permission WriteOwner](WriteOwner_authorisation.png)
+![BloodHound — Permission WriteOwner](images/tombwatcher/WriteOwner_authorisation.png)
 
 La permission **WriteOwner** (héritée, ACL) de `ADMINISTRATORS` sur `USERS` permet de changer le propriétaire de l'objet, puis de s'accorder `GenericAll` dessus — ouvrant la voie à une prise de contrôle complète.
 
