@@ -1,8 +1,10 @@
 [
   {
+    "id": "abuse-ai-c2",
     "title": "Abuse AI as C2 : Analyse et Remédiation",
     "date": "2026-06-23",
-    "tags": ["C2", "AI", "blue-team", "steganography", "detection"],
-    "file": "blog/Abuse-AI-C2.md"
+    "keywords": ["abused-ai-c2", "blue-team", "steganography"],
+    "file": "blog/Abuse-AI-C2.md",
+    "summary": "Analyse technique d'une méthode de C2 émergente qui détourne les API d'IA légitimes via la stéganographie linguistique."
   }
 ]
