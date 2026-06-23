@@ -1,5 +1,12 @@
 # Abuser d'une IA comme C2 — Cloud-Sourced C2
 
+---
+title: "Abuse AI as C2 : Analyse et Remédiation"
+date: 2026-06-23
+keywords: ["abused-ai-c2", "blue-team", "steganography"]
+layout: post
+---
+
 > Comment un malware peut utiliser une API d'IA légitime (OpenAI, Anthropic…) comme canal de commande et contrôle, et comment le détecter.
 
 ---
