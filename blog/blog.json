@@ -2,7 +2,7 @@
   {
     "title": "Abuse AI as C2 : Analyse et Remédiation",
     "date": "2026-06-23",
-    "tags": ["abused-ai-c2", "blue-team", "steganography"],
+    "tags": ["C2", "AI", "blue-team", "steganography", "detection"],
     "file": "blog/Abuse_AI_C2"
   }
 ]
