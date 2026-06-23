@@ -209,9 +209,9 @@
           const article = document.createElement('article');
           article.className = 'writeup-item';
 
-          // CORRECTION : Utilisation de entry.keywords à la place de entry.tags
-          const tagsHtml = entry.keywords
-            ? entry.keywords.map(t => `<span class="tag-badge">#${t}</span>`).join(' ')
+          // Utilisation stricte de entry.tags conforme à ton JSON actuel
+          const tagsHtml = entry.tags
+            ? entry.tags.map(t => `<span class="tag-badge">#${t}</span>`).join(' ')
             : '';
 
           const dateStr = entry.date 
@@ -262,16 +262,17 @@
           contentDiv.innerHTML = `<div class="writeup-loader">Chargement du contenu...</div>`;
           try {
             const res = await fetch(entry.file);
-            if (!res.ok) throw new Error("Fichier Markdown introuvable");
-            const rawMarkdown = await res.text();
+            if (!res.ok) throw new Error(`Fichier introuvable (${entry.file})`);
             
+            const rawMarkdown = await res.text();
             contentDiv.innerHTML = `<div class="writeup-inner">${marked.parse(rawMarkdown)}</div>`;
             
             contentDiv.querySelectorAll('pre code').forEach(block => {
               hljs.highlightElement(block);
             });
           } catch (err) {
-            contentDiv.innerHTML = `<div class="writeup-inner" style="color:#ff5555;">⚠️ Erreur lors de la lecture de l'article (${entry.file}).</div>`;
+            console.error(err);
+            contentDiv.innerHTML = `<div class="writeup-inner" style="color:#ff5555;">⚠️ Erreur de chargement : vérifie que le fichier s'appelle bien <b>${entry.file}</b></div>`;
           }
         }
 
