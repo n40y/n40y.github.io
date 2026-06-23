@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>n40y - Blog</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link id="highlight-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="style/style.css">
+
+  <style>
+    body {
+      background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1920&auto=format&fit=crop');
+      background-size: cover;
+      background-attachment: fixed;
+      overflow-x: hidden;
+    }
+    body.dark-mode::before {
+      content: ""; position: fixed; inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.65), rgba(2,6,12,0.85));
+      z-index: -2;
+    }
+    body.light-mode::before {
+      content: ""; position: fixed; inset: 0;
+      background: linear-gradient(180deg, rgba(232,236,239,0.2), rgba(245,247,250,0.4));
+      z-index: -2;
+    }
+
+    main {
+      position: relative; z-index: 2;
+      max-width: 1100px; margin: 0 auto;
+      background: rgba(10, 10, 15, 0.3);
+      backdrop-filter: blur(10px);
+      padding: 20px; border-radius: 12px;
+    }
+
+    /* ── Blog card ─────────────────────────────────── */
+    .writeup-item {
+      margin: 15px 0;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      overflow: hidden;
+    }
+
+    /* ── Titre cliquable ──────────────────────────── */
+    .clickable {
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 15px 20px;
+      user-select: none;
+      background: rgba(255,255,255,0.02);
+      transition: background 0.2s;
+    }
+    .clickable:hover { background: rgba(110,240,211,0.05); }
+    .clickable .title-text { color: #6ef0d3; font-weight: 600; font-size: 1.1rem; }
+    .clickable::after {
+      content: '+'; font-size: 1.4rem; color: #6ef0d3;
+      transition: transform 0.35s;
+      flex-shrink: 0;
+    }
+    .clickable.open::after { content: '−'; transform: rotate(180deg); }
+
+    /* ── Accordéon ────────────────────────────────── */
+    .writeup-content {
+      height: 0;
+      overflow: hidden;
+      transition: height 0.4s ease;
+    }
+
+    .writeup-inner {
+      padding: 20px;
+      border-top: 1px solid rgba(110,240,211,0.1);
+      box-sizing: border-box;
+    }
+
+    /* ── Loader ───────────────────────────────────── */
+    .writeup-loader {
+      padding: 20px;
+      color: #6ef0d3aa;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+
+    /* ── Badges de catégorie ──────────────────────── */
+    .tag-badge {
+      font-size: 10px; font-weight: 700;
+      padding: 3px 8px; border-radius: 4px;
+      text-transform: uppercase; margin-left: 10px;
+      background: rgba(110,240,211,0.12);
+      color: #6ef0d3;
+      border: 1px solid #6ef0d355;
+    }
+
+    /* ── Markdown ─────────────────────────────────── */
+    .writeup-inner h1, .writeup-inner h2 {
+      color: #b16bff;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 5px; margin-top: 20px;
+    }
+    .writeup-inner h3 { color: #6ef0d3; margin-top: 15px; }
+    .writeup-inner p  { margin: 10px 0; line-height: 1.7; }
+    .writeup-inner ul { margin: 8px 0 8px 20px; }
+    .writeup-inner a  { color: #6ef0d3; }
+    .writeup-inner blockquote {
+      border-left: 3px solid #b16bff;
+      padding: 8px 14px; margin: 14px 0;
+      background: rgba(177,107,255,0.07);
+      border-radius: 0 6px 6px 0;
+      font-style: italic;
+    }
+    .writeup-inner pre {
+      background: #0d1117 !important;
+      padding: 16px; border-radius: 8px;
+      overflow-x: auto;
+      border: 1px solid #30363d;
+      margin: 16px 0;
+    }
+    .writeup-inner code {
+      font-family: 'Fira Code', 'Hack', monospace;
+      font-size: 0.9em;
+    }
+    .writeup-inner img {
+      max-width: 100%; border-radius: 8px;
+      margin: 16px 0; border: 1px solid rgba(255,255,255,0.1);
+      display: block;
+    }
+    .writeup-inner table { width: 100%; border-collapse: collapse; margin: 14px 0; }
+    .writeup-inner th, .writeup-inner td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      text-align: left;
+    }
+    .writeup-inner th { color: #6ef0d3; }
+
+    /* ── Filtres ──────────────────────────────────── */
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
+    .filter-btn {
+      padding: 8px 18px; border-radius: 20px;
+      border: 1px solid #6ef0d344;
+      background: transparent; color: #6ef0d3aa;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: #6ef0d322; color: #6ef0d3; border-color: #6ef0d3;
+    }
+
+    /* ── Theme toggle ─────────────────────────────── */
+    .theme-toggle {
+      position: fixed; right: 20px; top: 20px;
+      border-radius: 50%; border: 0; cursor: pointer;
+      background: #1e90ff; color: #fff;
+      z-index: 1000; width: 45px; height: 45px;
+      font-size: 1.2rem;
+    }
+
+    /* ── Light mode overrides ─────────────────────── */
+    body.light-mode .writeup-item    { background: rgba(245,247,250,0.8); border-color: #e9ecef; }
+    body.light-mode .clickable       { background: rgba(245,247,250,0.5); }
+    body.light-mode .clickable .title-text { color: #5dade2; }
+    body.light-mode .clickable::after      { color: #5dade2; }
+    body.light-mode .writeup-inner h1,
+    body.light-mode .writeup-inner h2      { color: #bb8fce; }
+    body.light-mode .writeup-inner h3      { color: #5dade2; }
+    body.light-mode .writeup-inner pre     { background: #f1f3f4 !important; color: #3498db; border-color: #dee2e6; }
+    body.light-mode .tag-badge { background: rgba(93,173,226,0.12); color: #5dade2; border-color: #5dade255; }
+  </style>
+</head>
+
+<body class="dark-mode">
+  <button id="theme-toggle" class="theme-toggle">☀️</button>
+
+  <main>
+    <header>
+      <h1>📝 Blog</h1>
+      <p>Notes, découvertes et trucs qui m'ont marqué</p>
+    </header>
+
+    <div class="filters" id="filters">
+      <button class="filter-btn active" data-tag="all">Tous</button>
+    </div>
+
+    <div id="blogList"></div>
+
+    <p style="margin-top:30px">
+      <a href="index.html" style="color:#6ef0d3; font-weight:700; text-decoration:none">⬅ Retour au portfolio</a>
+    </p>
+  </main>
+
+  <script>
+    // ── marked config ───────────────────────────────────────────────────────────
+    marked.setOptions({
+      highlight: (code, lang) => {
+        try {
+          if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
+          return hljs.highlightAuto(code).value;
+        } catch { return code; }
+      },
+      breaks: true
+    });
+
+    // ── Accordéon : ouvrir ──────────────────────────────────────────────────────
+    function openAccordion(btn, content) {
+      btn.classList.add('open');
+      content.classList.add('open');
+      content.style.height = content.scrollHeight + 'px';
+      content.addEventListener('transitionend', () => {
+        if (content.classList.contains('open')) content.style.height = 'auto';
+      }, { once: true });
+    }
+
+    // ── Accordéon : fermer ──────────────────────────────────────────────────────
+    function closeAccordion(btn, content) {
+      if (content.style.height === 'auto' || content.style.height === '') {
+        content.style.height = content.scrollHeight + 'px';
+      }
+      content.getBoundingClientRect();
+      content.style.height = '0';
+      content.classList.remove('open');
+      btn.classList.remove('open');
+    }
+
+    function closeAllExcept(exceptContent) {
+      document.querySelectorAll('.writeup-content.open').forEach(other => {
+        if (other !== exceptContent) {
+          const otherBtn = other.closest('.writeup-item').querySelector('.clickable');
+          closeAccordion(otherBtn, other);
+        }
+      });
+    }
+
+    // ── Toggle article ──────────────────────────────────────────────────────────
+    async function toggleArticle(btn, content, entry) {
+      const isOpen = content.classList.contains('open');
+
+      if (isOpen) {
+        closeAccordion(btn, content);
+        return;
+      }
+
+      closeAllExcept(content);
+
+      if (!content.dataset.loaded) {
+        content.innerHTML = '<div class="writeup-loader">⏳ Chargement...</div>';
+        openAccordion(btn, content);
+
+        try {
+          const res = await fetch(entry.file);
+          if (!res.ok) throw new Error(res.status);
+          const md = await res.text();
+          content.innerHTML = `<div class="writeup-inner">${marked.parse(md)}</div>`;
+          content.dataset.loaded = 'true';
+          content.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+
+          content.style.height = 'auto';
+          const realHeight = content.scrollHeight;
+          content.style.height = realHeight + 'px';
+          requestAnimationFrame(() => { content.style.height = 'auto'; });
+
+        } catch (err) {
+          content.innerHTML = `<div class="writeup-inner" style="color:#e06339">
+            ❌ Impossible de charger <code>${entry.file}</code>
+          </div>`;
+        }
+        return;
+      }
+
+      openAccordion(btn, content);
+    }
+
+    // ── Construction de la page depuis blog.json ────────────────────────────────
+    async function buildPage() {
+      const list    = document.getElementById('blogList');
+      const filters = document.getElementById('filters');
+
+      let manifest;
+      try {
+        const res = await fetch('blog/blog.json');
+        manifest  = await res.json();
+      } catch {
+        list.innerHTML = '<p style="color:#e06339">❌ Impossible de charger blog/blog.json</p>';
+        return;
+      }
+
+      // Trie par date décroissante
+      manifest.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      // Boutons de filtre par tag
+      const allTags = [...new Set(manifest.flatMap(e => e.tags || []))];
+      allTags.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.className        = 'filter-btn';
+        btn.dataset.tag      = tag;
+        btn.textContent      = tag;
+        filters.appendChild(btn);
+      });
+
+      filters.addEventListener('click', e => {
+        if (!e.target.classList.contains('filter-btn')) return;
+        filters.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        const tag = e.target.dataset.tag;
+        document.querySelectorAll('.writeup-item').forEach(item => {
+          item.style.display = (tag === 'all' || item.dataset.tags?.split(',').includes(tag)) ? '' : 'none';
+        });
+      });
+
+      // Génère les articles
+      manifest.forEach(entry => {
+        const dateStr = entry.date
+          ? new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+          : '';
+
+        const tagsHtml = (entry.tags || [])
+          .map(t => `<span class="tag-badge">${t}</span>`)
+          .join('');
+
+        const article = document.createElement('article');
+        article.className       = 'writeup-item';
+        article.dataset.tags    = (entry.tags || []).join(',');
+        article.innerHTML = `
+          <div class="clickable">
+            <span>
+              <span class="title-text">${entry.title}</span>
+              ${tagsHtml}
+            </span>
+            <span style="font-size:0.8rem; opacity:0.45; margin-right:40px; flex-shrink:0;">${dateStr}</span>
+          </div>
+          <div class="writeup-content"></div>
+        `;
+
+        const btn     = article.querySelector('.clickable');
+        const content = article.querySelector('.writeup-content');
+        btn.addEventListener('click', () => toggleArticle(btn, content, entry));
+
+        list.appendChild(article);
+      });
+    }
+
+    buildPage();
+
+    // ── Thème ───────────────────────────────────────────────────────────────────
+    const themeBtn = document.getElementById('theme-toggle');
+    const hlTheme  = document.getElementById('highlight-theme');
+
+    function applyTheme(dark) {
+      document.body.classList.toggle('dark-mode',  dark);
+      document.body.classList.toggle('light-mode', !dark);
+      themeBtn.textContent = dark ? '☀️' : '🌙';
+      hlTheme.href = dark
+        ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
+        : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
+    }
+
+    applyTheme(localStorage.getItem('theme') !== 'light');
+
+    themeBtn.addEventListener('click', () => {
+      const dark = !document.body.classList.contains('dark-mode');
+      applyTheme(dark);
+      localStorage.setItem('theme', dark ? 'dark' : 'light');
+    });
+  </script>
+</body>
+</html>
