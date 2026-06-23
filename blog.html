@@ -195,7 +195,6 @@
 
     // ── Chargement et Rendu du Blog ─────────────────────────────────────────────
     async function buildPage() {
-      // CORRECTION : Cibler 'blogList' à la place de 'writeups-list'
       const list = document.getElementById('blogList');
       if (!list) return;
 
@@ -210,9 +209,9 @@
           const article = document.createElement('article');
           article.className = 'writeup-item';
 
-          // Utilisation de la classe 'tag-badge' déclarée dans ton CSS
-          const tagsHtml = entry.tags
-            ? entry.tags.map(t => `<span class="tag-badge">#${t}</span>`).join(' ')
+          // CORRECTION : Utilisation de entry.keywords à la place de entry.tags
+          const tagsHtml = entry.keywords
+            ? entry.keywords.map(t => `<span class="tag-badge">#${t}</span>`).join(' ')
             : '';
 
           const dateStr = entry.date 
@@ -266,7 +265,6 @@
             if (!res.ok) throw new Error("Fichier Markdown introuvable");
             const rawMarkdown = await res.text();
             
-            // Injection sous la classe structurelle globale de ton CSS : writeup-inner
             contentDiv.innerHTML = `<div class="writeup-inner">${marked.parse(rawMarkdown)}</div>`;
             
             contentDiv.querySelectorAll('pre code').forEach(block => {
@@ -277,8 +275,6 @@
           }
         }
 
-        // Gestion de la hauteur dynamique pour l'effet de transition
-        // Timeout pour forcer la prise en compte du nouveau contenu du DOM avant le calcul
         setTimeout(() => {
           contentDiv.style.height = contentDiv.scrollHeight + 'px';
         }, 10);
