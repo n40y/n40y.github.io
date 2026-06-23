@@ -1,7 +1,7 @@
 ---
 title: "Abuse AI as C2 : Analyse et Remédiation"
 date: 2026-06-23
-keywords: ["C2", "IA", "Stéganographie", "Detection"]
+keywords: ["C2", "AI", "blue-team", "steganography", "detection"]
 layout: post
 ---
 
