@@ -1,8 +1,6 @@
 ---
 title: "Abuse AI as C2 : Analyse et Remédiation"
 date: 2026-06-23
-keywords: ["abused-ai-c2", "blue-team", "steganography"]
-layout: post
 ---
 
 # Abuser d'une IA comme C2 — Cloud-Sourced C2
