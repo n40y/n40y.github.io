@@ -191,132 +191,127 @@
 
   <script>
     // ── Configuration ──────────────────────────────────────────────────────────
-const JSON_INDEX = 'blog/blog.json'; // Chemin vers ton index JSON
+    const JSON_INDEX = 'blog/blog.json'; 
 
-// ── Chargement et Rendu du Blog ─────────────────────────────────────────────
-async function buildPage() {
-  const list = document.getElementById('writeups-list');
-  if (!list) return;
+    // ── Chargement et Rendu du Blog ─────────────────────────────────────────────
+    async function buildPage() {
+      // CORRECTION : Cibler 'blogList' à la place de 'writeups-list'
+      const list = document.getElementById('blogList');
+      if (!list) return;
 
-  try {
-    const response = await fetch(JSON_INDEX);
-    if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
-    const articles = await response.json();
-
-    // Tri des articles du plus récent au plus ancien
-    articles.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    // Génération de la liste des articles
-    articles.forEach(entry => {
-      const article = document.createElement('article');
-      article.className = 'writeup-item';
-
-      const tagsHtml = entry.tags
-        ? entry.tags.map(t => `<span class="diff-badge diff-easy">#${t}</span>`).join(' ')
-        : '';
-
-      const dateStr = entry.date 
-        ? new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-        : '';
-
-      article.innerHTML = `
-        <div class="writeup-header clickable">
-          <span style="display:inline-flex; align-items:center; gap:15px; flex-grow:1;">
-            <span class="title-text">${entry.title}</span>
-            ${tagsHtml}
-          </span>
-          <span style="font-size:0.8rem; opacity:0.45; margin-right:40px; flex-shrink:0;">${dateStr}</span>
-        </div>
-        <div class="writeup-content"></div>
-      `;
-
-      const btn = article.querySelector('.clickable');
-      const content = article.querySelector('.writeup-content');
-      
-      // Gestion du clic pour ouvrir/fermer l'article en lisant son fichier Markdown
-      btn.addEventListener('click', () => toggleArticle(btn, content, entry));
-
-      list.appendChild(article);
-    });
-
-  } catch (error) {
-    console.error("Erreur lors du chargement du blog :", error);
-    list.innerHTML = `<p style="color:#ff5555; text-align:center; padding:20px;">⚠️ Impossible de charger les articles du blog.</p>`;
-  }
-}
-
-// ── Fonction d'animation et de parsing Markdown ─────────────────────────────
-async function toggleArticle(btn, contentDiv, entry) {
-  const isOpening = !btn.classList.contains('active');
-  
-  // Fermer les autres articles si nécessaire (optionnel)
-  document.querySelectorAll('.writeup-header.active').forEach(el => {
-    if (el !== btn) {
-      el.classList.remove('active');
-      const c = el.nextElementSibling;
-      c.style.maxHeight = null;
-      c.style.padding = '0 20px';
-    }
-  });
-
-  if (isOpening) {
-    btn.classList.add('active');
-    
-    // Si le contenu n'a pas encore été chargé, on fait le fetch du fichier Markdown
-    if (!contentDiv.innerHTML) {
-      contentDiv.innerHTML = `<p style="opacity:0.5; padding:20px;">Chargement du contenu...</p>`;
       try {
-        const res = await fetch(entry.file);
-        if (!res.ok) throw new Error("Fichier Markdown introuvable");
-        const rawMarkdown = await res.text();
-        
-        // Utilisation de Marked.js pour transformer le Markdown en HTML
-        contentDiv.innerHTML = `<div class="markdown-body" style="padding:20px;">${marked.parse(rawMarkdown)}</div>`;
-        
-        // Coloration syntaxique du code (Highlight.js)
-        contentDiv.querySelectorAll('pre code').forEach(block => {
-          hljs.highlightElement(block);
+        const response = await fetch(JSON_INDEX);
+        if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+        const articles = await response.json();
+
+        articles.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        articles.forEach(entry => {
+          const article = document.createElement('article');
+          article.className = 'writeup-item';
+
+          // Utilisation de la classe 'tag-badge' déclarée dans ton CSS
+          const tagsHtml = entry.tags
+            ? entry.tags.map(t => `<span class="tag-badge">#${t}</span>`).join(' ')
+            : '';
+
+          const dateStr = entry.date 
+            ? new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            : '';
+
+          article.innerHTML = `
+            <div class="writeup-header clickable">
+              <span style="display:inline-flex; align-items:center; gap:15px; flex-grow:1;">
+                <span class="title-text">${entry.title}</span>
+                ${tagsHtml}
+              </span>
+              <span style="font-size:0.8rem; opacity:0.45; margin-right:40px; flex-shrink:0;">${dateStr}</span>
+            </div>
+            <div class="writeup-content"></div>
+          `;
+
+          const btn = article.querySelector('.clickable');
+          const content = article.querySelector('.writeup-content');
+          
+          btn.addEventListener('click', () => toggleArticle(btn, content, entry));
+
+          list.appendChild(article);
         });
-      } catch (err) {
-        contentDiv.innerHTML = `<p style="color:#ff5555; padding:20px;">⚠️ Erreur lors de la lecture de l'article (${entry.file}).</p>`;
+
+      } catch (error) {
+        console.error("Erreur lors du chargement du blog :", error);
+        list.innerHTML = `<p style="color:#ff5555; text-align:center; padding:20px;">⚠️ Impossible de charger les articles du blog.</p>`;
       }
     }
 
-    // Calcul de la hauteur pour l'effet de transition CSS Smooth Accordion
-    contentDiv.style.padding = '10px 20px 20px 20px';
-    contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
-  } else {
-    btn.classList.remove('active');
-    contentDiv.style.maxHeight = null;
-    contentDiv.style.padding = '0 20px';
-  }
-}
+    // ── Fonction d'animation et de parsing Markdown ─────────────────────────────
+    async function toggleArticle(btn, contentDiv, entry) {
+      const isOpening = !btn.classList.contains('open');
+      
+      document.querySelectorAll('.clickable.open').forEach(el => {
+        if (el !== btn) {
+          el.classList.remove('open');
+          const c = el.nextElementSibling;
+          c.style.height = '0';
+        }
+      });
 
-// Initialisation de la page
-buildPage();
+      if (isOpening) {
+        btn.classList.add('open');
+        
+        if (!contentDiv.innerHTML) {
+          contentDiv.innerHTML = `<div class="writeup-loader">Chargement du contenu...</div>`;
+          try {
+            const res = await fetch(entry.file);
+            if (!res.ok) throw new Error("Fichier Markdown introuvable");
+            const rawMarkdown = await res.text();
+            
+            // Injection sous la classe structurelle globale de ton CSS : writeup-inner
+            contentDiv.innerHTML = `<div class="writeup-inner">${marked.parse(rawMarkdown)}</div>`;
+            
+            contentDiv.querySelectorAll('pre code').forEach(block => {
+              hljs.highlightElement(block);
+            });
+          } catch (err) {
+            contentDiv.innerHTML = `<div class="writeup-inner" style="color:#ff5555;">⚠️ Erreur lors de la lecture de l'article (${entry.file}).</div>`;
+          }
+        }
 
-// ── Gestion du Thème (Inchangé) ──────────────────────────────────────────────
-const themeBtn = document.getElementById('theme-toggle');
-const hlTheme  = document.getElementById('highlight-theme');
+        // Gestion de la hauteur dynamique pour l'effet de transition
+        // Timeout pour forcer la prise en compte du nouveau contenu du DOM avant le calcul
+        setTimeout(() => {
+          contentDiv.style.height = contentDiv.scrollHeight + 'px';
+        }, 10);
+      } else {
+        btn.classList.remove('open');
+        contentDiv.style.height = '0';
+      }
+    }
 
-function applyTheme(dark) {
-  document.body.classList.toggle('dark-mode',  dark);
-  document.body.classList.toggle('light-mode', !dark);
-  themeBtn.textContent = dark ? '☀️' : '🌙';
-  if (hlTheme) {
-    hlTheme.href = dark
-      ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
-      : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
-  }
-}
+    buildPage();
 
-applyTheme(localStorage.getItem('theme') !== 'light');
+    // ── Gestion du Thème ────────────────────────────────────────────────────────
+    const themeBtn = document.getElementById('theme-toggle');
+    const hlTheme  = document.getElementById('highlight-theme');
 
-themeBtn.addEventListener('click', () => {
-  const dark = !document.body.classList.contains('dark-mode');
-  applyTheme(dark);
-  localStorage.setItem('theme', dark ? 'dark' : 'light');
-});
+    function applyTheme(dark) {
+      document.body.classList.toggle('dark-mode',  dark);
+      document.body.classList.toggle('light-mode', !dark);
+      themeBtn.textContent = dark ? '☀️' : '🌙';
+      if (hlTheme) {
+        hlTheme.href = dark
+          ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
+          : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
+      }
+    }
+
+    applyTheme(localStorage.getItem('theme') !== 'light');
+
+    themeBtn.addEventListener('click', () => {
+      const dark = !document.body.classList.contains('dark-mode');
+      applyTheme(dark);
+      localStorage.setItem('theme', dark ? 'dark' : 'light');
+    });
   </script>
 </body>
 </html>
