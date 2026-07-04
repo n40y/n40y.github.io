@@ -313,8 +313,8 @@ cat root.txt
 ```
 
 ```
-THM{I-2h0uld-f1r3-fr4nK}
-THM{frank-and-herby-still-suck}
+THM{I-2h0uld-th9ng5}
+THM{kubernete5_st1ll-5uck}
 ```
 
 ### 4.4 Nettoyage
