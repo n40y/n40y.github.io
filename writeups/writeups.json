@@ -3,7 +3,7 @@
     "platform": "HackTheBox",
     "title": "MakeSense",
     "difficulty": "Medium",
-    "os": "Ubuntu 24.04.4 LTS",
+    "os": "Ubuntu",
     "date": "2026-11-03",
     "file": "writeups/htb-MakeSense.md"
   },
